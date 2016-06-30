@@ -1,0 +1,4 @@
+*~
+*.pyc
+first_test/
+symlinks_separate_ints/*
