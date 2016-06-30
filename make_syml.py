@@ -3,6 +3,7 @@ import numpy as np
 from subprocess import call
 import os
 import ipdb
+from astropy.io import fits
 
 def make_syml(output='first_test'):
     """
@@ -21,4 +22,19 @@ def make_syml(output='first_test'):
         for datfile in glob.glob(basedir+test+'/*.fits'):
             link = linkdir+'/'+os.path.basename(datfile)
             call(['ln','-s',datfile,link])
+
+def make_flats():
+    """
+    Makes single extension versions of the flat fields
+    """
+    basedir = '/usr/local/nircamsuite/cal/Flat/ISIMCV3/'
+    outdir = '/data1/tso_analysis/all_tso_cv3/flat_data/'
+    filel = glob.glob(basedir+'*_F150W_*.fits')
+    for onefile in filel:
+        HDU = fits.open(onefile)
+        if '_illumpattern' not in onefile:
+            newHDU = HDU[1]
+            basename, extname = os.path.splitext(os.path.basename(onefile))
+            newHDU.writeto(outdir+basename+'_1ext.fits')
+            HDU.close()
 
