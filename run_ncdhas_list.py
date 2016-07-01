@@ -27,7 +27,7 @@ basedir     = '/data1/tso_analysis/all_tso_cv3/'
 if basedir == getcwd():
     basedir = ''
 
-if len(argv) <=2:
+if len(argv) <2:
     raise Exception('No argument specified.')
 
 if len(argv) >= 3:
