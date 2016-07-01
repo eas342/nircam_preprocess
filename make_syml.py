@@ -5,7 +5,7 @@ import os
 import ipdb
 from astropy.io import fits
 
-def make_syml(output='first_test'):
+def make_syml(output='symlinks_separate_int'):
     """
     Makes symbolic links to all files
     """
@@ -22,6 +22,16 @@ def make_syml(output='first_test'):
         for datfile in glob.glob(basedir+test+'/*.fits'):
             link = linkdir+'/'+os.path.basename(datfile)
             call(['ln','-s',datfile,link])
+
+def copy_syml():
+    """
+    Copies the symbolic links to all files into files for outputs
+    """
+    for ipc in ['P','M']:
+        for lin in ['P','M']:
+            for flat in ['P','M']:
+                dirname = 'raw_separated_'+ipc+lin+flat
+                call('cp -r symlinks_separate_ints '+dirname,shell=True)
 
 def make_flats():
     """
