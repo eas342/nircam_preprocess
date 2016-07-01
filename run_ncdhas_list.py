@@ -11,7 +11,7 @@
 
 import pdb
 from subprocess import call
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import check_output
 from os import listdir, getcwd
 from sys import argv
 from copy import deepcopy
@@ -35,7 +35,7 @@ set_raw_dirs= listdir(basedir + rawdir)
 
 raw_files       = {}
 
-ignoretypes = ['.red.','.dia.','.slp.','.cds.']
+ignoretypes = ['.red.','.dia.','.slp.','.cds.','.txt']
 for dirNow in set_raw_dirs:
     fitsList = listdir(basedir + rawdir + dirNow)
     useList = deepcopy(fitsList)
@@ -80,6 +80,7 @@ flagsNOW    = flagopt[argv[1]] + flags_end
 flatdir = '/data1/tso_analysis/all_tso_cv3/flat_data/'
 
 for dirNow in raw_files.keys():
+    dirOutput = []
     for filename in raw_files[dirNow]:
         fileNOW     = basedir + rawdir + dirNow + '/' + filename
         head = fits.getheader(fileNOW)
@@ -87,7 +88,14 @@ for dirNow in raw_files.keys():
             flatname = glob.glob(flatdir+head['DETECTOR']+'*.fits')
             flagsNOW = flagsNOW +' +FFf '+ flatname[0]
         #pdb.set_trace()
-        call(ncdhas+' '+fileNOW+' '+flagsNOW,shell=True)
+        #p = Popen(ncdhas+' '+fileNOW+' '+flagsNOW,shell=True,stdout=PIPE)
+        out = check_output(ncdhas+' '+fileNOW+' '+flagsNOW,shell=True)
+        print out
+        dirOutput.append(out)
+    with open(basedir + rawdir + dirNow+'/ncdhas_output.txt','w') as outputfile:
+        for line in dirOutput:
+            outputfile.write(line)
+            
 
 # for dirNow in raw_files.keys():
 #     red_files_list = basedir + rawdir + dirNow + '/' + '*.*.fits'
