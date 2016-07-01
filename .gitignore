@@ -6,3 +6,4 @@ raw_separated*
 all_fits_list.txt
 one_file_tests/
 flat_data
+nohup.out
