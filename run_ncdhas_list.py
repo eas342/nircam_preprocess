@@ -61,7 +61,7 @@ reddir      = reddir + argv[1] + '/'
 ''' Everett suggests ALWAYS having CBS on: (A + B2) - (A + B1) = B2 - B1 (+cbs removes A from all frames) '''
 
 ''' Now run without CDS (we can always take plane [1] - plane[0] of the red image'''
-flags_all   = '+cfg isimcv3 +ow -wi -wd +ws -rx +rc -rss +rsf +cbp +cs +cbs -cd'
+flags_all   = '+cfg isimcv3 +ow +wi -wd +ws -rx +rc -rss +rsf +cbp +cs +cbs -cd'
 
 p_ipc   = ' +ipc'
 m_ipc   = ' -ipc'
@@ -85,7 +85,8 @@ flags_end   = ''
 
 flagsNOW    = flagopt[argv[1]] + flags_end
 
-flatdir = '/data1/tso_analysis/all_tso_cv3/flat_data/'
+flatdir = '/usr/local/nircamsuite/cal/Flat/ISIMCV3/'
+flatsuffix = '*PFlat_F150W_CLEAR_2016-04-05.fits'
 
 for dirNow in raw_files.keys():
     dirOutput = []
@@ -94,9 +95,9 @@ for dirNow in raw_files.keys():
         head = fits.getheader(fileNOW)
         if argv[1][2] == 'P':
             flatname = glob.glob(flatdir+head['DETECTOR']+'*.fits')
+            flatname = glob.glob(flatdir+head['DETECTOR']+flatsuffix)
             flagsNOW = flagsNOW +' +FFf '+ flatname[0]
         #pdb.set_trace()
-        #p = Popen(ncdhas+' '+fileNOW+' '+flagsNOW,shell=True,stdout=PIPE)
         out = check_output(ncdhas+' '+fileNOW+' '+flagsNOW,shell=True)
         print out
         dirOutput.append(out)
@@ -104,7 +105,6 @@ for dirNow in raw_files.keys():
         for line in dirOutput:
             outputfile.write(line)
             
-pdb.set_trace()
 # for dirNow in raw_files.keys():
 #     red_files_list = basedir + rawdir + dirNow + '/' + '*.*.fits'
 #     call(['/bin/mkdir', '-p', basedir + reddir + dirNow])
