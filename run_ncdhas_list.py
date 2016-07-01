@@ -1,6 +1,6 @@
 '''
-1:  -ipc -cl -cf    NOT DONE
-2:  +ipc -cl -cf    NOT DONE
+1:  -ipc -cl -cf    started 2016/06/30T17:48
+2:  +ipc -cl -cf    started 2016/06/30T17:50 - did it go?
 3:  -ipc +cl -cf    NOT DONE
 4:  -ipc -cl +cf    NOT DONE
 5:  +ipc +cl -cf    NOT DONE
@@ -27,9 +27,18 @@ basedir     = '/data1/tso_analysis/all_tso_cv3/'
 if basedir == getcwd():
     basedir = ''
 
-#rawdir      = 'raw_separated_'
-#rawdir      = rawdir + argv[1] + '/'
-rawdir = 'one_file_tests/'
+if len(argv) <=2:
+    raise Exception('No argument specified.')
+
+if len(argv) >= 3:
+    if argv[2] == 'test':
+        rawdir = 'one_file_tests/'
+    else:
+        raise Exception('Unexpected input')
+else:
+    rawdir      = 'raw_separated_'
+    rawdir      = rawdir + argv[1] + '/'
+
 
 set_raw_dirs= listdir(basedir + rawdir)
 
@@ -61,7 +70,6 @@ m_cl    = ' -cl'
 p_cf    = ' +cf '
 m_cf    = ' -cf'
 
-'NRCA3_17012_PFlat_F150W_CLEAR_2016-04-05_imgonly.fits'
 
 flagopt = {}
 flagopt['MMM']    = flags_all + m_ipc + m_cl + m_cf  # 1  X
@@ -96,7 +104,7 @@ for dirNow in raw_files.keys():
         for line in dirOutput:
             outputfile.write(line)
             
-
+pdb.set_trace()
 # for dirNow in raw_files.keys():
 #     red_files_list = basedir + rawdir + dirNow + '/' + '*.*.fits'
 #     call(['/bin/mkdir', '-p', basedir + reddir + dirNow])
