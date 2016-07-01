@@ -61,7 +61,7 @@ reddir      = reddir + argv[1] + '/'
 ''' Everett suggests ALWAYS having CBS on: (A + B2) - (A + B1) = B2 - B1 (+cbs removes A from all frames) '''
 
 ''' Now run without CDS (we can always take plane [1] - plane[0] of the red image'''
-flags_all   = '+cfg isimcv3 +ow +wi -wd +ws -rx +rc -rss +rsf +cbp +cs +cbs -cd'
+flags_all   = '+cfg isimcv3 +ow +wi +wd +ws -rx +rc -rss +rsf +cbp +cs +cbs -cd'
 
 p_ipc   = ' +ipc'
 m_ipc   = ' -ipc'
