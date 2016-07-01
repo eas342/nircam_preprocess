@@ -31,10 +31,11 @@ def make_flats():
     outdir = '/data1/tso_analysis/all_tso_cv3/flat_data/'
     filel = glob.glob(basedir+'*_F150W_*.fits')
     for onefile in filel:
-        HDU = fits.open(onefile)
         if '_illumpattern' not in onefile:
-            newHDU = HDU[1]
+            HDU = fits.open(onefile)
+            outdata = HDU[1].data
+            outheader = HDU[0].header
             basename, extname = os.path.splitext(os.path.basename(onefile))
-            newHDU.writeto(outdir+basename+'_1ext.fits')
+            fits.writeto(outdir+basename+'_1ext.fits',outdata,outheader,clobber=True)
             HDU.close()
 
