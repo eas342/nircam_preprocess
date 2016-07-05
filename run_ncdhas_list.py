@@ -10,6 +10,7 @@
 '''
 
 import pdb
+import subprocess
 from subprocess import call
 from subprocess import check_output
 from os import listdir, getcwd
@@ -98,9 +99,18 @@ for dirNow in raw_files.keys():
             flatname = glob.glob(flatdir+head['DETECTOR']+flatsuffix)
             flagsNOW = flagsNOW +' +FFf '+ flatname[0]
         #pdb.set_trace()
-        out = check_output(ncdhas+' '+fileNOW+' '+flagsNOW,shell=True)
-        print out
-        dirOutput.append(out)
+
+        cmd = ncdhas+' '+fileNOW+' '+flagsNOW
+        try:
+            out = check_output(cmd,shell=True)
+            dirOutput.append(out)
+        except subprocess.CalledProcessError as e:
+            saveout="command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output)
+            dirOutput.append(saveout)
+        except:
+            saveout="Unknown error for command:"+cmd
+            dirOutput.append(saveout)
+
     with open(basedir + rawdir + dirNow+'/ncdhas_output.txt','w') as outputfile:
         for line in dirOutput:
             outputfile.write(line)
