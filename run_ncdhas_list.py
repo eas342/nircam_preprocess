@@ -1,12 +1,12 @@
 '''
-1:  -ipc -cl -cf    started 2016/06/30T17:48
-2:  +ipc -cl -cf    started 2016/06/30T17:50 - did it go?
-3:  -ipc +cl -cf    NOT DONE
-4:  -ipc -cl +cf    NOT DONE
-5:  +ipc +cl -cf    NOT DONE
-6:  +ipc -cl +cf    NOT DONE
-7:  -ipc +cl +cf    NOT DONE
-8:  +ipc +cl +cf    NOT DONE
+1:  -ipc -cl -cf    
+2:  +ipc -cl -cf    
+3:  -ipc +cl -cf    
+4:  -ipc -cl +cf    
+5:  +ipc +cl -cf    
+6:  +ipc -cl +cf    
+7:  -ipc +cl +cf    
+8:  +ipc +cl +cf    
 '''
 
 import pdb
@@ -68,7 +68,7 @@ p_ipc   = ' +ipc'
 m_ipc   = ' -ipc'
 p_cl    = ' +cl'
 m_cl    = ' -cl'
-p_cf    = ' +cf '
+p_cf    = ' +cf'
 m_cf    = ' -cf'
 
 
@@ -84,7 +84,7 @@ flagopt['PPP']    = flags_all + p_ipc + p_cl + p_cf  # 8  X
 
 flags_end   = ''
 
-flagsNOW    = flagopt[argv[1]] + flags_end
+flagChoice    = flagopt[argv[1]] + flags_end
 
 flatdir = '/usr/local/nircamsuite/cal/Flat/ISIMCV3/'
 flatsuffix = '*PFlat_F150W_CLEAR_2016-04-05.fits'
@@ -97,10 +97,13 @@ for dirNow in raw_files.keys():
         if argv[1][2] == 'P':
             flatname = glob.glob(flatdir+head['DETECTOR']+'*.fits')
             flatname = glob.glob(flatdir+head['DETECTOR']+flatsuffix)
-            flagsNOW = flagsNOW +' +FFf '+ flatname[0]
-        #pdb.set_trace()
+            flagsNOW = flagChoice +' +FFf '+ flatname[0]
+        else:
+            flagsNOW = flagChoice
 
         cmd = ncdhas+' '+fileNOW+' '+flagsNOW
+        dirOutput.append('Command to be executed:')
+        dirOutput.append(cmd)
         try:
             out = check_output(cmd,shell=True)
             dirOutput.append(out)
@@ -113,7 +116,7 @@ for dirNow in raw_files.keys():
 
     with open(basedir + rawdir + dirNow+'/ncdhas_output.txt','w') as outputfile:
         for line in dirOutput:
-            outputfile.write(line)
+            outputfile.write(line+'\n')
             
 # for dirNow in raw_files.keys():
 #     red_files_list = basedir + rawdir + dirNow + '/' + '*.*.fits'
