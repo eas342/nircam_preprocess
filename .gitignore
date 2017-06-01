@@ -8,3 +8,5 @@ one_file_tests/
 flat_data
 nohup.out
 runlist.txt
+no_ref_raw_separated_MMM/
+temperatures
