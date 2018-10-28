@@ -1,2 +1,2 @@
 baseDir: /data/External/ISIMCV3_unzipped/NRCN821/fitsfilesonly/raw_separated/ ## directory for separated file (with es_breaknint already run)
-outputDir: symlinks_separate_int
+outputDir: symlinks_separate_ints

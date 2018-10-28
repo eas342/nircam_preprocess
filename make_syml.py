@@ -4,14 +4,21 @@ from subprocess import call
 import os
 import ipdb
 from astropy.io import fits
+import yaml
+from shutil import copyfile
 
-def make_syml(output='symlinks_separate_int'):
+paramFile = 'parameters/symLinkParams.yaml'
+if os.path.exists(paramFile) == False:
+    copyfile('parameters/symLinkParam_example.yaml',paramFile)
+symLinkParam = yaml.load(open(paramFile))
+
+
+def make_syml(output=symLinkParam['outputDir']):
     """
     Makes symbolic links to all files
     """
-    basedir = '/data/External/ISIMCV3_unzipped/NRCN821/fitsfilesonly/raw_separated/'
-
-
+    basedir = symLinkParam['baseDir']
+    
     if not os.path.exists(output):
         call(['mkdir',output])
     tests = os.listdir(basedir)
