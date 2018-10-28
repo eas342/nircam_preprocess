@@ -13,3 +13,4 @@ full_ref_raw_separated_MMM
 no_ref_one_file_tests
 temperatures
 parameters/symLinkParams.yaml
+parameters/ncdhasParams.yaml

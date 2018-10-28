@@ -13,18 +13,26 @@ import pdb
 import subprocess
 from subprocess import call
 from subprocess import check_output
+import os
+import yaml
 from os import listdir, getcwd
 from sys import argv
 from copy import deepcopy
 from astropy.io import fits
 import glob
 
-ncdhas      = '/usr/local/ncdhas/ncdhas'
+
+paramFile = 'parameters/ncdhasParams.yaml'
+if os.path.exists(paramFile) == False:
+    copyfile('parameters/ncdhas_example.yaml',paramFile)
+ncdhasParam = yaml.load(open(paramFile))
+
+ncdhas      = ncdhasParam['ncdhasCommand']
 
 
 
 ''' Setup File Structures '''
-basedir     = '/data1/tso_analysis/all_tso_cv3/'
+basedir     = ncdhasParam['dataDir']
 if basedir == getcwd():
     basedir = ''
 
