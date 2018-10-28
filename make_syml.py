@@ -6,6 +6,7 @@ import ipdb
 from astropy.io import fits
 import yaml
 from shutil import copyfile
+import pdb
 
 paramFile = 'parameters/symLinkParams.yaml'
 if os.path.exists(paramFile) == False:
@@ -26,7 +27,9 @@ def make_syml(output=symLinkParam['outputDir']):
         linkdir=output+'/'+test
         if not os.path.exists(linkdir):
             call(['mkdir',linkdir])
-        for datfile in glob.glob(basedir+test+'/*.fits'):
+        
+        fitsSearch = os.path.join(basedir,test,'*.fits')
+        for datfile in glob.glob(fitsSearch):
             link = linkdir+'/'+os.path.basename(datfile)
             call(['ln','-s',datfile,link])
 
