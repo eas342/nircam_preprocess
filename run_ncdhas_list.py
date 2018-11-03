@@ -111,11 +111,17 @@ for dirNow in raw_files.keys():
         fileNOW     = basedir + rawdir + dirNow + '/' + filename
         head = fits.getheader(fileNOW)
         if argv[1][2] == 'P':
-            if (head['DETECTOR'] == 'NRCA5') or (head['DETECTOR'] == 'NRCB5'):
+            if (head['DETECTOR'] == 'NRCALONG'):
                 flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
+                detectorName = 'NRCA5'
+            elif (head['DETECTOR'] == 'NRCBLONG'):
+                flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
+                detectorName = 'NRCB5'
             else:
                 flatsuffix = '*PFlat_F150W_CLEAR_2016-04-05.fits'
-            flatname = glob.glob(flatdir+head['DETECTOR']+flatsuffix)
+                detectorName = head['DETECTOR']
+            flatname = glob.glob(flatdir+detectorName+flatsuffix)
+            
             if len(flatname) >= 1:
                 flagsNOW = flagChoice +' +FFf '+ flatname[0]
             else:
