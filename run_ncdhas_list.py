@@ -111,7 +111,7 @@ for dirNow in raw_files.keys():
         fileNOW     = basedir + rawdir + dirNow + '/' + filename
         head = fits.getheader(fileNOW)
         if argv[1][2] == 'P':
-            if (head['DETECTOR'] = 'NRCA5') or (head['DETECTOR'] == 'NRCB5'):
+            if (head['DETECTOR'] == 'NRCA5') or (head['DETECTOR'] == 'NRCB5'):
                 flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
             else:
                 flatsuffix = '*PFlat_F150W_CLEAR_2016-04-05.fits'
