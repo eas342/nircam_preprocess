@@ -20,7 +20,7 @@ from sys import argv
 from copy import deepcopy
 from astropy.io import fits
 import glob
-
+import warnings
 
 paramFile = 'parameters/ncdhasParams.yaml'
 if os.path.exists(paramFile) == False:
@@ -104,7 +104,6 @@ flags_end   = ''
 flagChoice    = flagopt[argv[1]] + flags_end
 
 flatdir = '/usr/local/nircamsuite/cal/Flat/ISIMCV3/'
-flatsuffix = '*PFlat_F150W_CLEAR_2016-04-05.fits'
 
 for dirNow in raw_files.keys():
     dirOutput = []
@@ -112,9 +111,16 @@ for dirNow in raw_files.keys():
         fileNOW     = basedir + rawdir + dirNow + '/' + filename
         head = fits.getheader(fileNOW)
         if argv[1][2] == 'P':
-            flatname = glob.glob(flatdir+head['DETECTOR']+'*.fits')
+            if (head['DETECTOR'] = 'NRCA5') or (head['DETECTOR'] == 'NRCB5'):
+                flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
+            else:
+                flatsuffix = '*PFlat_F150W_CLEAR_2016-04-05.fits'
             flatname = glob.glob(flatdir+head['DETECTOR']+flatsuffix)
-            flagsNOW = flagChoice +' +FFf '+ flatname[0]
+            if len(flatname) >= 1:
+                flagsNOW = flagChoice +' +FFf '+ flatname[0]
+            else:
+                warnings.warn("No flat found for detector {}".format(head['DETECTOR']))
+                flagsNOW = flagChoice
         else:
             flagsNOW = flagChoice
 
