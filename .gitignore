@@ -14,3 +14,7 @@ no_ref_one_file_tests
 temperatures
 parameters/symLinkParams.yaml
 parameters/ncdhasParams.yaml
+backup_nohup/*.out
+test_run/
+old/
+additional_proc_MPP/
