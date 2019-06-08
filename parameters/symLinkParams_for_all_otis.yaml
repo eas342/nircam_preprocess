@@ -1,0 +1,2 @@
+baseDir: /data1/RedES/otis_stability ## directory for separated file (with es_breaknint already run)
+outputDir: symlinks_separate_ints

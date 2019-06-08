@@ -14,34 +14,45 @@ if os.path.exists(paramFile) == False:
 symLinkParam = yaml.load(open(paramFile))
 
 
-def make_syml(output=symLinkParam['outputDir']):
+def make_syml(output=symLinkParam['symLinkDir']):
     """
     Makes symbolic links to all files
     """
     basedir = symLinkParam['baseDir']
-    
+    ## make an output link directory
     if not os.path.exists(output):
         call(['mkdir',output])
+    
+    ## make a sub-directory for the first copy of sym links
+    linkOutput = os.path.join(output,'symlinks_separated')
+    if not os.path.exists(linkOutput):
+        call(['mkdir',linkOutput])
     tests = os.listdir(basedir)
+    
     for test in tests:
-        linkdir=output+'/'+test
+        linkdir=linkOutput+'/'+test
         if not os.path.exists(linkdir):
             call(['mkdir',linkdir])
         
         fitsSearch = os.path.join(basedir,test,'*.fits')
         for datfile in glob.glob(fitsSearch):
             link = linkdir+'/'+os.path.basename(datfile)
-            call(['ln','-s',datfile,link])
+            if os.path.exists(link) == False:
+                call(['ln','-s',datfile,link])
 
 def copy_syml():
     """
     Copies the symbolic links to all files into files for outputs
     """
+    
+    linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_separated')
     for ipc in ['P','M']:
         for lin in ['P','M']:
             for flat in ['P','M']:
                 dirname = 'raw_separated_'+ipc+lin+flat
-                call('cp -r symlinks_separate_ints '+dirname,shell=True)
+                outName = os.path.join(symLinkParam['symLinkDir'],dirname)
+                if os.path.exists(outName) == False:
+                    call('cp -r {} {}'.format(linkDir,outName),shell=True)
 
 def make_flats():
     """
@@ -59,3 +70,6 @@ def make_flats():
             fits.writeto(outdir+basename+'_1ext.fits',outdata,outheader,clobber=True)
             HDU.close()
 
+if __name__ == '__main__':
+    make_syml()
+    copy_syml()
