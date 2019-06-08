@@ -17,6 +17,7 @@ import os
 import yaml
 from os import listdir, getcwd
 from sys import argv
+import sys
 from copy import deepcopy
 from astropy.io import fits
 import glob
@@ -145,7 +146,13 @@ for dirNow in raw_files.keys():
 
     with open(basedir + rawdir + dirNow+'/ncdhas_output.txt','w') as outputfile:
         for line in dirOutput:
-            outputfile.write(line+b'\n')
+            if (type(line) != str) & (sys.version_info >= (3, 0)):
+                useLine = str(line,'ascii')
+            else:
+                useLine = line
+            outputfile.write(useLine+'\n')
+            
+            
             
 # for dirNow in raw_files.keys():
 #     red_files_list = basedir + rawdir + dirNow + '/' + '*.*.fits'
