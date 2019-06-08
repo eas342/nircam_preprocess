@@ -31,19 +31,19 @@ for oneFile in fileL:
     baseName = os.path.splitext(os.path.basename(oneFile))[0]
     
     if customRegion == True:
-        leftHandSide = np.median(dat[:,0:1400],axis=1)
-        rightHandSide = np.median(dat[:,1800:2048],axis=1)
+        leftHandSide = np.nanmedian(dat[:,0:1400],axis=1)
+        rightHandSide = np.nanmedian(dat[:,1800:2048],axis=1)
         medianOfEachRow = (leftHandSide + rightHandSide) /2.
         
         rowRegionText = "[0:1400] and [1800:2048]"
     else:
-        medianOfEachRow = np.median(dat,axis=1)
+        medianOfEachRow = np.nanmedian(dat,axis=1)
         rowRegionText = "[0:2048]"
     
     correction2D = np.tile(medianOfEachRow,[head['NAXIS1'],1]).transpose()
 
     if correctionMode == 'rowColSub':
-        medianOfEachColumn = np.median(dat,axis=0)
+        medianOfEachColumn = np.nanmedian(dat,axis=0)
         correction2D_col = np.tile(medianOfEachColumn,[head['NAXIS1'],1])
         correctedDat = dat - correction2D - correction2D_col
     else:
