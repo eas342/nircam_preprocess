@@ -145,7 +145,7 @@ for dirNow in raw_files.keys():
 
     with open(basedir + rawdir + dirNow+'/ncdhas_output.txt','w') as outputfile:
         for line in dirOutput:
-            outputfile.write(line+'\n')
+            outputfile.write(line+b'\n')
             
 # for dirNow in raw_files.keys():
 #     red_files_list = basedir + rawdir + dirNow + '/' + '*.*.fits'
