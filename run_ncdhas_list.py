@@ -150,6 +150,7 @@ for dirNow in raw_files.keys():
                 useLine = str(line,'ascii')
             else:
                 useLine = line
+            useLine = useLine.replace('\\n','\n')
             outputfile.write(useLine+'\n')
             
             
