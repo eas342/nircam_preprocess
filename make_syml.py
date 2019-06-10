@@ -34,7 +34,7 @@ def make_syml(output=symLinkParam['symLinkDir']):
         if not os.path.exists(linkdir):
             call(['mkdir',linkdir])
         
-        fitsSearch = os.path.join(basedir,test,'*.fits')
+        fitsSearch = os.path.join(basedir,test,'*I[0123456789]*.fits')
         for datfile in glob.glob(fitsSearch):
             link = linkdir+'/'+os.path.basename(datfile)
             if os.path.exists(link) == False:
