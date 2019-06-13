@@ -7,6 +7,7 @@ from astropy.io import fits
 import yaml
 from shutil import copyfile
 import pdb
+from copy import deepcopy
 
 paramFile = 'parameters/symLinkParams.yaml'
 if os.path.exists(paramFile) == False:
@@ -24,6 +25,116 @@ def build_files(dirSearch=defaultDirSearch):
             os.mkdir(dirName)
         link = os.path.join(dirName,baseName)
         call(['ln','-s',oneFile,link])
+
+defaultBreaknint = ('/surtrdata1/tso_analysis/AZLab_darks/rpi_vs_rpf_all/'+
+                    'NRCTEST2RPF_1_487_S_2019-05-30T21h50m51/NRCTEST2RPF_1_487_S_2019-05-30T21h50m51.fits')
+
+def breaknint(fitsFile=defaultBreaknint):
+    """
+    
+    NAME:
+    ---------
+    
+    
+    PURPOSE:
+    ---------
+          Separate a 'nominal' NIRCam exposure of NINTS packed into a 
+          cube into separate FITS files for each integration. 
+    
+    CATEGORY:
+    ---------
+          Data analysis, NIRCam 
+    
+    
+    Parameters
+    ------------
+    fitsFile: str
+        Fits file
+
+    
+    DESCRIPTION:
+    ------------
+          A nominal NIRCam exposure will consist of NINT individual
+          ramps. For some reason, someone though it's a good idea to
+          make the exposure into a DATA CUBE of size (NX,NY,NZ) where NZ
+          is NINT*NGROUP.  A CUBE.  Not extensions, not single files, A
+          CUBE. So this code breaks up the exposure into individual FITS
+          files, one for each integration. 
+    
+    MODIFICATION HISTORY:
+          Spring 2012 - Created; putridmeat (misselt@as.arizona.edu)
+          Summ 2019 - converting to Python
+    """
+    HDUList = fits.open(fitsFile)
+    head = HDUList[0].header
+    dat = HDUList[0].data
+    
+    # Get data axes
+    nx = dat.shape[2]
+    ny = dat.shape[1]
+    nr = dat.shape[0]
+    
+    # Check nint
+    if "NINT" in head:
+        nint = head["NINT"]
+        if nint == 1:  # not a packed data cube
+            print("NINT is {}; {} is not a packed data cube.".format(nint,fitsFile))
+            return
+    else:
+        print("Keyword NINT not found; can't split data up.")
+        return
+    
+    
+    # check ngroup
+    if "NGROUP" not in head:
+        print('Keyword NGROUP not found.  Assuming NGROUP = NREAD/NINT')
+        print('NREAD: {}'.format(nr))
+        print('NINT:  {}'.format(nint))
+        if np.mod(nr,nint) != 0:
+            print("NREAD is not an even multiple of NINT. Can''t proceed")
+            return
+        else:
+            ngroup = nr/nint
+            print('Setting NGROUP to {}'.format(ngroup))
+    else: # ngroup found make sure number works
+        ngroup = head["NGROUP"]
+        if nr != ngroup * nint:
+            print("Counting doesn''t work out. NREAD must equal NGROUP*NINT")
+            print('NINT:  {}'.format(nint))
+            print('NGROUP: {}'.format(ngroup))
+            print('NGROUP*NINT: '.format(ngroup * nint))
+            print('NREAD: '.format(nr))
+            return
+    
+    # start your engines. 
+    dat = HDUList[0].data
+    BaseName = os.path.splitext(fitsFile)[0]
+    print(fitsFile)
+    print(BaseName)
+    z0=0
+    z1=z0+ngroup-1
+    for i in np.arange(nint): # Loop over nints
+        FullHeader=deepcopy(head)
+        
+        tmpStr="{:04d}".format(i)
+        # Get this block on nint
+        _thisint = dat[z0:z1]
+        _thisheader = FullHeader
+        _thisfile = BaseName + '_I' + tmpStr + '.fits'
+        _thisheader['NINT'] = 1 # set nint to 1
+        _thisheader.insert("NINT",("ON_NINT",i+1,"This is INT of TOT_NINT"))
+        _thisheader.insert("ON_NINT",("TOT_NINT",nint,"Total number of NINT in original file"))
+        _thisheader["COMMENT"] = 'Extracted from a multi-integration file by ParseIntegration.pro'
+        outHDU = fits.PrimaryHDU(_thisint,header=_thisheader)
+        if os.path.exists(_thisfile):
+            print("Found {}. Not overwriting".format(_thisfile))
+        else:
+            outHDU.writeto(_thisfile)
+        z0 += ngroup
+        z1 = z0+ngroup-1
+        del outHDU
+    
+    HDUList.close()
 
 def make_syml(output=symLinkParam['symLinkDir']):
     """
