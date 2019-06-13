@@ -14,6 +14,17 @@ if os.path.exists(paramFile) == False:
 symLinkParam = yaml.load(open(paramFile))
 
 
+defaultDirSearch = '/surtrdata/Local/AZLab/Dark/Test2/*.fits'
+def build_files(dirSearch=defaultDirSearch):
+    for oneFile in glob.glob(dirSearch):
+        baseName = os.path.basename(oneFile)
+        preName = os.path.splitext(baseName)[0]
+        dirName = os.path.join(symLinkParam['baseDir'],preName)
+        if os.path.exists(dirName) == False:
+            os.mkdir(dirName)
+        link = os.path.join(dirName,baseName)
+        call(['ln','-s',oneFile,link])
+
 def make_syml(output=symLinkParam['symLinkDir']):
     """
     Makes symbolic links to all files
