@@ -18,3 +18,5 @@ backup_nohup/*.out
 test_run/
 old/
 additional_proc_MPP/
+parameters/ncdhasParams_*.yaml
+parameters/symLinkParams_*.yaml
