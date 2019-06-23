@@ -136,17 +136,32 @@ def breaknint(fitsFile=defaultBreaknint):
     
     HDUList.close()
 
-def make_syml(output=symLinkParam['symLinkDir']):
+def make_syml(output=symLinkParam['symLinkDir'],fromRefPix=False):
     """
     Makes symbolic links to all files
+    
+    Parameters
+    -----------
+    output: str
+        where to put the directory for symbolically linked files
+    fromRefPix: bool
+        Use output from reference pixel correction?
     """
-    basedir = symLinkParam['baseDir']
+    if fromRefPix == True:
+        basedir = os.path.join(symLinkParam['symLinkDir'],'raw_separated_refpix')
+    else:
+        basedir = symLinkParam['baseDir']
+    
     ## make an output link directory
     if not os.path.exists(output):
         call(['mkdir',output])
     
     ## make a sub-directory for the first copy of sym links
-    linkOutput = os.path.join(output,'symlinks_separated')
+    if fromRefPix == True:
+        linkOutput = os.path.join(output,'symlinks_sep_refpix')
+    else:
+        linkOutput = os.path.join(output,'symlinks_separated')
+    
     if not os.path.exists(linkOutput):
         call(['mkdir',linkOutput])
     tests = os.listdir(basedir)

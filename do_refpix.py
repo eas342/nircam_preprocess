@@ -10,6 +10,7 @@ from shutil import copyfile
 import yaml
 import pdb
 from copy import deepcopy
+import make_syml
 
 paramFile = 'parameters/symLinkParams.yaml'
 if os.path.exists(paramFile) == False:
@@ -84,3 +85,4 @@ def do_testrun():
 if __name__ == "__main__":
     make_symlink_dir()
     do_refpix()
+    make_syml.make_syml(fromRefPix=True)
