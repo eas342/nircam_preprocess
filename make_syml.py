@@ -2,7 +2,6 @@ import glob
 import numpy as np
 from subprocess import call
 import os
-import ipdb
 from astropy.io import fits
 import yaml
 from shutil import copyfile
