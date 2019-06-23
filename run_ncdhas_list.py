@@ -49,6 +49,8 @@ if len(argv) >= 3:
         rawdir = 'no_ref_raw_separated_'+argv[1] + '/'
     elif argv[2] == 'fullRefAll':
         rawdir = 'full_ref_raw_separated_'+argv[1] + '/'
+    elif argv[2] == 'refpix':
+        rawdir = 'raw_separated_{}_refpix'.format(argv[1])
     else:
         raise Exception('Unexpected input')
 else:
