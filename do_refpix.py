@@ -11,6 +11,7 @@ import yaml
 import pdb
 from copy import deepcopy
 import make_syml
+from multiprocessing import Pool
 
 paramFile = 'parameters/symLinkParams.yaml'
 if os.path.exists(paramFile) == False:
@@ -45,7 +46,28 @@ def get_rawfiles():
         raw_files[oneDir] = useList
     return raw_files
 
-def do_refpix(testMode=False):
+def one_file_refpix(allInput):
+    fileName,linkDir,dirNow,saveDir,ntop,nbot = allInput
+    HDUList = fits.open(os.path.join(linkDir,dirNow,fileName))
+    dat = HDUList[0].data
+    useDat = pynrc.reduce.ref_pixels.reffix_hxrg(dat,nchans=4,in_place=True,fixcol=True,
+                                                 altcol=True,ntop=ntop,nbot=nbot,left_ref=4,
+                                                 right_ref=4)
+    dat = HDUList[0].data
+    header = HDUList[0].header
+    header['REFPIX'] = (True,'pynrc reference pixel applied?')
+    outName = os.path.join(saveDir,fileName)
+    primHDU = fits.PrimaryHDU(useDat,header=header)
+    
+    if os.path.exists == outName:
+        print("Already found {}. Skipping.".format(outName))
+    else:
+        primHDU.writeto(outName,overwrite=True)
+        
+    HDUList.close()
+
+
+def do_refpix(testMode=False,ntop=0,nbot=4):
     raw_files = get_rawfiles()
     for dirNow in raw_files.keys():
         print("Working on directory {} of {}".format(dirNow,len(raw_files.keys())))
@@ -59,24 +81,12 @@ def do_refpix(testMode=False):
         else:
             useFiles = raw_files[dirNow]
         
+        inputList = []
         for fileName in useFiles:
-            HDUList = fits.open(os.path.join(linkDir,dirNow,fileName))
-            dat = HDUList[0].data
-            useDat = pynrc.reduce.ref_pixels.reffix_hxrg(dat,nchans=4,in_place=True,fixcol=True,
-                                                         altcol=True,ntop=0,nbot=4,left_ref=4,
-                                                         right_ref=4)
-            dat = HDUList[0].data
-            header = HDUList[0].header
-            header['REFPIX'] = (True,'pynrc reference pixel applied?')
-            outName = os.path.join(saveDir,fileName)
-            primHDU = fits.PrimaryHDU(useDat,header=header)
-            
-            if os.path.exists == outName:
-                print("Already found {}. Skipping.".format(outName))
-            else:
-                primHDU.writeto(outName,overwrite=True)
-            
-            HDUList.close()
+            inputList.append([fileName,linkDir,dirNow,saveDir,ntop,nbot])
+        
+        p = Pool(6)
+        p.map(one_file_refpix,inputList)
 
 
 def do_testrun():
