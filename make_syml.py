@@ -62,7 +62,7 @@ def breaknint(fitsFile=defaultBreaknint):
     
     MODIFICATION HISTORY:
           Spring 2012 - Created; putridmeat (misselt@as.arizona.edu)
-          Summ 2019 - converting to Python
+          Summer 2019 - converting to Python (eas342@email.arizona.edu)
     """
     HDUList = fits.open(fitsFile)
     head = HDUList[0].header
@@ -113,6 +113,9 @@ def breaknint(fitsFile=defaultBreaknint):
     z0=0
     z1=z0+ngroup-1
     for i in np.arange(nint): # Loop over nints
+        if np.mod(i,40) == 0:
+            print("Breakining int {} of {}".format(i,nint))
+        
         FullHeader=deepcopy(head)
         
         tmpStr="{:04d}".format(i)
