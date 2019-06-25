@@ -13,10 +13,11 @@ from copy import deepcopy
 import make_syml
 from multiprocessing import Pool
 
-paramFile = 'parameters/symLinkParams.yaml'
+paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
-    raise Exception("No symlink params file found")
-symLinkParam = yaml.load(open(paramFile))
+    copyfile('parameters/example_pipe_params.yaml',paramFile)
+with open(paramFile) as paramFileOpen:
+    symLinkParam = yaml.load(paramFileOpen)
 
 dirname = 'raw_separated_refpix'
 linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_separated')
@@ -85,7 +86,7 @@ def do_refpix(testMode=False,ntop=0,nbot=4):
         for fileName in useFiles:
             inputList.append([fileName,linkDir,dirNow,saveDir,ntop,nbot])
         
-        p = Pool(6)
+        p = Pool(16)
         p.map(one_file_refpix,inputList)
 
 
