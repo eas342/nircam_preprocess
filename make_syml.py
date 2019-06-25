@@ -124,7 +124,7 @@ def breaknint(fitsFile=defaultBreaknint):
         
         tmpStr="{:04d}".format(i)
         # Get this block on nint
-        _thisint = dat[z0:z1]
+        _thisint = dat[z0:z1+1]
         _thisheader = FullHeader
         _thisfile = BaseName + '_I' + tmpStr + '.fits'
         _thisheader['NINT'] = 1 # set nint to 1
