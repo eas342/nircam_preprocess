@@ -118,7 +118,7 @@ def breaknint(fitsFile=defaultBreaknint):
     z1=z0+ngroup-1
     for i in np.arange(nint): # Loop over nints
         if np.mod(i,40) == 0:
-            print("Breakining int {} of {}".format(i,nint))
+            print("Breaking int {} of {}".format(i,nint))
         
         FullHeader=deepcopy(head)
         
