@@ -8,14 +8,18 @@ from shutil import copyfile
 import pdb
 from copy import deepcopy
 
-paramFile = 'parameters/symLinkParams.yaml'
+paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
-    copyfile('parameters/symLinkParam_example.yaml',paramFile)
-symLinkParam = yaml.load(open(paramFile))
+    copyfile('parameters/example_pipe_params.yaml',paramFile)
+with open(paramFile) as paramFileOpen:
+    symLinkParam = yaml.load(paramFileOpen)
 
 
 defaultDirSearch = '/surtrdata/Local/AZLab/Dark/Test2/*.fits'
 def build_files(dirSearch=defaultDirSearch):
+    if os.path.exists(symLinkParam['baseDir']) == False:
+        os.mkdir(symLinkParam['baseDir'])
+    
     for oneFile in glob.glob(dirSearch):
         baseName = os.path.basename(oneFile)
         preName = os.path.splitext(baseName)[0]

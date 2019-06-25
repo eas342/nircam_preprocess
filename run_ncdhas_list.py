@@ -23,17 +23,18 @@ from astropy.io import fits
 import glob
 import warnings
 
-paramFile = 'parameters/ncdhasParams.yaml'
+paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
-    copyfile('parameters/ncdhas_example.yaml',paramFile)
-ncdhasParam = yaml.load(open(paramFile))
+    copyfile('parameters/example_pipe_params.yaml',paramFile)
+with open(paramFile) as paramFileOpen:
+    ncdhasParam = yaml.load(paramFileOpen)
 
 ncdhas      = ncdhasParam['ncdhasCommand']
 
 
 
 ''' Setup File Structures '''
-basedir     = ncdhasParam['dataDir']
+basedir     = ncdhasParam['symLinkDir']+'/'
 if basedir == getcwd():
     basedir = ''
 
