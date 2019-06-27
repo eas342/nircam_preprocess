@@ -33,7 +33,7 @@ def run_all():
     make_syml.make_syml()
     
     print("Applying pynrc reference pixel corrections...")
-    ## Correct reference pixels with sybarrays
+    ## Correct reference pixels with pynrc since it works on subarrays
     do_refpix.make_symlink_dir()
     do_refpix.do_refpix(nbot=0,ntop=4)
     
