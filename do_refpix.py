@@ -65,7 +65,7 @@ def one_file_refpix(allInput):
     outName = os.path.join(saveDir,fileName)
     primHDU = fits.PrimaryHDU(useDat,header=header)
     
-    if os.path.exists == outName:
+    if os.path.exists(outName) == True:
         print("Already found {}. Skipping.".format(outName))
     else:
         primHDU.writeto(outName,overwrite=True)
