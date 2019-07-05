@@ -1,3 +1,0 @@
-ncdhasCommand: /usr/local/ncdhas/ncdhas ## Command to run ncdhas
-dataDir: /data1/tso_analysis/all_tso_cv3/ ## Directory of sub-directories with the separated data
-
