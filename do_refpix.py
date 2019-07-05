@@ -13,6 +13,8 @@ from copy import deepcopy
 import make_syml
 from multiprocessing import Pool
 
+pynrc.setup_logging('WARN', verbose=False)
+
 paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
     copyfile('parameters/example_pipe_params.yaml',paramFile)
@@ -89,7 +91,7 @@ def do_refpix(testMode=False):
         for fileName in useFiles:
             inputList.append([fileName,linkDir,dirNow,saveDir])
         
-        p = Pool(16)
+        p = Pool(12)
         p.map(one_file_refpix,inputList)
 
 
