@@ -48,14 +48,17 @@ def get_rawfiles():
     return raw_files
 
 def one_file_refpix(allInput):
-    fileName,linkDir,dirNow,saveDir,ntop,nbot = allInput
+    fileName,linkDir,dirNow,saveDir = allInput
     HDUList = fits.open(os.path.join(linkDir,dirNow,fileName))
     dat = HDUList[0].data
-    useDat = pynrc.reduce.ref_pixels.reffix_hxrg(dat,nchans=4,in_place=True,fixcol=True,
-                                                 altcol=True,ntop=ntop,nbot=nbot,left_ref=4,
-                                                 right_ref=4)
-    dat = HDUList[0].data
     header = HDUList[0].header
+    refObject = pynrc.reduce.ref_pixels.NRC_refs(dat,header,altcol=True)
+    refObject.calc_avg_amps()
+    refObject.correct_amp_refs()
+    refObject.calc_avg_cols(avg_type='pixel')
+    refObject.calc_col_smooth()
+    refObject.correct_col_refs()
+    useDat = refObject.data
     header['REFPIX'] = (True,'pynrc reference pixel applied?')
     outName = os.path.join(saveDir,fileName)
     primHDU = fits.PrimaryHDU(useDat,header=header)
@@ -68,7 +71,7 @@ def one_file_refpix(allInput):
     HDUList.close()
 
 
-def do_refpix(testMode=False,ntop=0,nbot=4):
+def do_refpix(testMode=False):
     raw_files = get_rawfiles()
     for dirNow in raw_files.keys():
         print("Working on directory {} of {}".format(dirNow,len(raw_files.keys())))
@@ -84,7 +87,7 @@ def do_refpix(testMode=False,ntop=0,nbot=4):
         
         inputList = []
         for fileName in useFiles:
-            inputList.append([fileName,linkDir,dirNow,saveDir,ntop,nbot])
+            inputList.append([fileName,linkDir,dirNow,saveDir])
         
         p = Pool(16)
         p.map(one_file_refpix,inputList)

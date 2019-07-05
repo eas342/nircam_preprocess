@@ -35,7 +35,7 @@ def run_all():
     print("Applying pynrc reference pixel corrections...")
     ## Correct reference pixels with pynrc since it works on subarrays
     do_refpix.make_symlink_dir()
-    do_refpix.do_refpix(nbot=0,ntop=4)
+    do_refpix.do_refpix()
     
     print("Making symbolic links to refence-corrected integrations...")
     ## Make symbolic links to the files that have been reference pixel corrected
