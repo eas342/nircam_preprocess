@@ -44,8 +44,10 @@ def run_all():
     ## copy the symbolic links where ncdas will be run
     symlinks_sep_refpix = os.path.join(pipeParams['symLinkDir'],'symlinks_sep_refpix')
     runDirectory = os.path.join(pipeParams['symLinkDir'],'raw_separated_MMM_refpix')
-    call('cp -r {} {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
-
+    if os.path.exists(runDirectory) == False:
+        os.mkdir(runDirectory)
+    call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
+    
     print("Running NCDHAS on reference-corrected data...")
     ## Run this command line version of ncdhas
     call('python run_ncdhas_list.py MMM refpix',shell=True)
