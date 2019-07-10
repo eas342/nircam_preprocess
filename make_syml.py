@@ -102,11 +102,11 @@ def breaknint(fitsFile=defaultBreaknint):
     else: # ngroup found make sure number works
         ngroup = head["NGROUP"]
         if nr != ngroup * nint:
-            print("Counting doesn''t work out. NREAD must equal NGROUP*NINT")
+            print("Counting doesn't work out. NREAD must equal NGROUP*NINT")
             print('NINT:  {}'.format(nint))
             print('NGROUP: {}'.format(ngroup))
-            print('NGROUP*NINT: '.format(ngroup * nint))
-            print('NREAD: '.format(nr))
+            print('NGROUP*NINT: {}'.format(ngroup * nint))
+            print('NREAD: {}'.format(nr))
             return
     
     # start your engines. 
