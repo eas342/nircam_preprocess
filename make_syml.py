@@ -27,7 +27,8 @@ def build_files(dirSearch=defaultDirSearch):
         if os.path.exists(dirName) == False:
             os.mkdir(dirName)
         link = os.path.join(dirName,baseName)
-        call(['ln','-s',oneFile,link])
+        if os.path.exists(link) == False:
+            call(['ln','-s',oneFile,link])
 
 defaultBreaknint = ('/surtrdata1/tso_analysis/AZLab_darks/rpi_vs_rpf_all/'+
                     'NRCTEST2RPF_1_487_S_2019-05-30T21h50m51/NRCTEST2RPF_1_487_S_2019-05-30T21h50m51.fits')
