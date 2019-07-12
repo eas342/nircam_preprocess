@@ -22,6 +22,8 @@ from copy import deepcopy
 from astropy.io import fits
 import glob
 import warnings
+import logging
+from multiprocessing import Pool
 
 paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
@@ -63,7 +65,7 @@ set_raw_dirs= listdir(basedir + rawdir)
 
 raw_files       = {}
 
-ignoretypes = ['.red.','.dia.','.slp.','.cds.','.txt']
+ignoretypes = ['.red.','.dia.','.slp.','.cds.','.txt','ncdhas_output']
 for dirNow in set_raw_dirs:
     fitsList = listdir(basedir + rawdir + dirNow)
     useList = deepcopy(fitsList)
@@ -111,8 +113,42 @@ flagChoice    = flagopt[argv[1]] + flags_end
 
 flatdir = '/usr/local/nircamsuite/cal/Flat/ISIMCV3/'
 
+def run_command_save_output(thisInput):
+    """ Takes a command line input and logging file
+    Run the command and save the output
+    """
+    cmd, loggingFileName = thisInput
+    
+    dirOutput=[]
+    dirOutput.append('Command to be executed:')
+    dirOutput.append(cmd)
+    try:
+        out = check_output(cmd,shell=True)
+        dirOutput.append(out)
+    except subprocess.CalledProcessError as e:
+        saveout="command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output)
+        dirOutput.append(saveout)
+    except:
+        saveout="Unknown error for command:"+cmd
+        dirOutput.append(saveout)
+    
+    with open(loggingFileName,'w') as loggingFile:
+        for line in dirOutput:
+            if (type(line) != str) & (sys.version_info >= (3, 0)):
+                useLine = str(line,'ascii')
+            else:
+                useLine = line
+            useLine = useLine.replace('\\n','\n')
+            loggingFile.write(useLine+'\n')
+
+
 for dirNow in raw_files.keys():
-    dirOutput = []
+    print("Working on {}...".format(dirNow))
+    cmdList = []
+    loggingDir = basedir + rawdir + dirNow + '/' + 'ncdhas_output'
+    if os.path.exists(loggingDir) == False:
+        os.mkdir(loggingDir)
+    
     for filename in raw_files[dirNow]:
         fileNOW     = basedir + rawdir + dirNow + '/' + filename
         head = fits.getheader(fileNOW)
@@ -137,27 +173,13 @@ for dirNow in raw_files.keys():
             flagsNOW = flagChoice
 
         cmd = ncdhas+' '+fileNOW+' '+flagsNOW
-        dirOutput.append('Command to be executed:')
-        dirOutput.append(cmd)
-        try:
-            out = check_output(cmd,shell=True)
-            dirOutput.append(out)
-        except subprocess.CalledProcessError as e:
-            saveout="command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output)
-            dirOutput.append(saveout)
-        except:
-            saveout="Unknown error for command:"+cmd
-            dirOutput.append(saveout)
+        namePrefix = os.path.splitext(filename)[0]
+        loggingFile = os.path.join(loggingDir,'ncdhas_{}.txt'.format(namePrefix))
+        cmdList.append([cmd,loggingFile])
+    
+    p = Pool(10)
+    p.map(run_command_save_output,cmdList)
 
-    with open(basedir + rawdir + dirNow+'/ncdhas_output.txt','w') as outputfile:
-        for line in dirOutput:
-            if (type(line) != str) & (sys.version_info >= (3, 0)):
-                useLine = str(line,'ascii')
-            else:
-                useLine = line
-            useLine = useLine.replace('\\n','\n')
-            outputfile.write(useLine+'\n')
-            
             
             
 # for dirNow in raw_files.keys():
