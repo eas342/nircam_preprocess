@@ -32,25 +32,38 @@ def run_all():
     print("Making symbolic links to individual integrations...")
     make_syml.make_syml()
     
-    print("Applying pynrc reference pixel corrections...")
-    ## Correct reference pixels with pynrc since it works on subarrays
-    do_refpix.make_symlink_dir()
-    do_refpix.do_refpix()
+    if 'pynrcRefpix' not in pipeParams:
+        pynrcRefpix = True
+    else:
+        pynrcRefpix = pipeParams['pyrncRefpix']
     
-    print("Making symbolic links to refence-corrected integrations...")
-    ## Make symbolic links to the files that have been reference pixel corrected
-    make_syml.make_syml(fromRefPix=True)
-    
-    ## copy the symbolic links where ncdas will be run
-    symlinks_sep_refpix = os.path.join(pipeParams['symLinkDir'],'symlinks_sep_refpix')
-    runDirectory = os.path.join(pipeParams['symLinkDir'],'raw_separated_MMM_refpix')
-    if os.path.exists(runDirectory) == False:
-        os.mkdir(runDirectory)
-    call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
-    
-    print("Running NCDHAS on reference-corrected data...")
-    ## Run this command line version of ncdhas
-    call('python run_ncdhas_list.py MMM refpix',shell=True)
+    if pynrcRefpix == True:
+        print("Applying pynrc reference pixel corrections...")
+        ## Correct reference pixels with pynrc since it works on subarrays
+        do_refpix.make_symlink_dir()
+        do_refpix.do_refpix()
+        
+        print("Making symbolic links to refence-corrected integrations...")
+        ## Make symbolic links to the files that have been reference pixel corrected
+        make_syml.make_syml(fromRefPix=True)
+        
+        ## copy the symbolic links where ncdas will be run
+        symlinks_sep_refpix = os.path.join(pipeParams['symLinkDir'],'symlinks_sep_refpix')
+        runDirectory = os.path.join(pipeParams['symLinkDir'],'raw_separated_MMM_refpix')
+        if os.path.exists(runDirectory) == False:
+            os.mkdir(runDirectory)
+        call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
+        
+        print("Running NCDHAS on reference-corrected data...")
+        ## Run this command line version of ncdhas
+        call('python run_ncdhas_list.py MMM refpix',shell=True)
+    else:
+        symlinks_sep = os.path.join(pipeParams['symLinkDir'],'symlinks_separated')
+        runDirectory = os.path.join(pipeParams['symLinkDir'],'raw_separated_MMM')
+        call('cp -r {}/* {}'.format(symlinks_sep,runDirectory),shell=True)
+        print("Running NCDHAS on MMM data...")
+        ## Run this command line version of ncdhas
+        call('python run_ncdhas_list.py MMM',shell=True)
     
 if __name__ == "__main__":
     run_all()
