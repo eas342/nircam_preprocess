@@ -58,7 +58,7 @@ def one_file_refpix(allInput):
     refObject.calc_avg_amps()
     refObject.correct_amp_refs()
     refObject.calc_avg_cols(avg_type='pixel')
-    refObject.calc_col_smooth()
+    refObject.calc_col_smooth(savgol=True)
     refObject.correct_col_refs()
     useDat = refObject.data
     header['REFPIX'] = (True,'pynrc reference pixel applied?')
