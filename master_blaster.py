@@ -10,8 +10,8 @@ import pdb
 ## Must be run with the astroconda environment where I installed pynrc
 ## (if wanting to use his reference pixel routines)
 
-def run_all():
-    with open('parameters/pipe_params.yaml') as pipeParamFile:
+def run_all(pipeParamsFileName='parameters/pipe_params.yaml'):
+    with open(pipeParamFileName) as pipeParamFile:
         pipeParams = yaml.load(pipeParamFile)
     
     origFiles = pipeParams['originalFiles']
@@ -73,4 +73,8 @@ def run_all():
         call('python run_ncdhas_list.py MMM',shell=True)
     
 if __name__ == "__main__":
-    run_all()
+    if len(sys.argv) >= 2:
+        pipeParamFile = sys.argv[1]
+    else:
+        pipeParamFile = 'parameters/pipe_params.yaml'
+    run_all(pipeParamFile=pipeParamFile)
