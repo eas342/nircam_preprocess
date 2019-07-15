@@ -13,7 +13,7 @@ import sys
 
 def run_all(pipeParamsFileName='parameters/pipe_params.yaml'):
     with open(pipeParamsFileName) as pipeParamFile:
-        pipeParams = yaml.load(pipeParamFile)
+        pipeParams = yaml.safe_load(pipeParamFile)
     
     origFiles = pipeParams['originalFiles']
     

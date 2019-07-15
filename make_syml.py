@@ -12,7 +12,7 @@ paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
     copyfile('parameters/example_pipe_params.yaml',paramFile)
 with open(paramFile) as paramFileOpen:
-    symLinkParam = yaml.load(paramFileOpen)
+    symLinkParam = yaml.safe_load(paramFileOpen)
 
 
 defaultDirSearch = '/surtrdata/Local/AZLab/Dark/Test2/*.fits'
