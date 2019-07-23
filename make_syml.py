@@ -178,11 +178,13 @@ def make_syml(output=symLinkParam['symLinkDir'],fromRefPix=False):
         if not os.path.exists(linkdir):
             call(['mkdir',linkdir])
         
-        fitsSearch = os.path.join(basedir,test,'*I[0123456789]*.fits')
+        fitsSearch = os.path.join(basedir,test,'*.fits')
         for datfile in glob.glob(fitsSearch):
-            link = linkdir+'/'+os.path.basename(datfile)
-            if os.path.exists(link) == False:
-                call(['ln','-s',datfile,link])
+            ## Skip the original file containing the entire exposure
+            if datfile != os.path.join(basedir,test,'{}.fits'.format(test)):
+                link = linkdir+'/'+os.path.basename(datfile)
+                if os.path.exists(link) == False:
+                    call(['ln','-s',datfile,link])
 
 def copy_syml():
     """
