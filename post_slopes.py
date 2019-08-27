@@ -21,9 +21,9 @@ if os.path.exists(outputDir) == False:
     os.mkdir(outputDir)
 
 if 'rowsUse' not in pipeParam:
-    rowsUse = [[0,80],[140,256]]
+    pipeParam['rowsUse'] = [[0,80],[140,256]]
 if 'colsUse' not in pipeParam:
-    colsUse = [[4,190]]
+    pipeParam['colsUse'] = [[4,190]]
 
 
 def do_subtraction(inputPath,outFilePath,diagnostics=False):
@@ -33,7 +33,7 @@ def do_subtraction(inputPath,outFilePath,diagnostics=False):
     img = dat[0]
     
     
-    rowsAndCols = [rowsUse,colsUse]
+    rowsAndCols = [pipeParam['rowsUse'],pipeParam['colsUse']]
     
     x,y = np.meshgrid(np.arange(img.shape[1]),np.arange(img.shape[0]))
     allCoords = [y,x]
