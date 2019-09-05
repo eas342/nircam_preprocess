@@ -36,6 +36,8 @@ def run_all(testMode=False):
         for oneFile in filesToRun:
             baseName = os.path.basename(oneFile)
             HDUList = fits.open(oneFile)
+            HDUList[0].header['BITPIX'] = -64
+            HDUList[0].data = np.array(HDUList[0].data,dtype=np.float)
             NGROUP = HDUList[0].header['NGROUP']
             for oneGrp in np.arange(NGROUP):
                 thisData = HDUList[0].data[oneGrp]
