@@ -83,7 +83,7 @@ def breaknint(fitsFile=defaultBreaknint):
         nint = head["NINT"]
         if nint == 1:  # not a packed data cube
             print("NINT is {}; {} is not a packed data cube.".format(nint,fitsFile))
-            return
+            print("Going to create just one int file")
     else:
         print("Keyword NINT not found; can't split data up.")
         return
@@ -125,7 +125,10 @@ def breaknint(fitsFile=defaultBreaknint):
         
         tmpStr="{:04d}".format(i)
         # Get this block on nint
-        _thisint = dat[z0:z1+1]
+        if nint == 1:
+            _thisint = dat
+        else:
+            _thisint = dat[z0:z1+1]
         _thisheader = FullHeader
         _thisfile = BaseName + '_I' + tmpStr + '.fits'
         _thisheader['NINT'] = 1 # set nint to 1
