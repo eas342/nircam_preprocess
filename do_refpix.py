@@ -59,7 +59,11 @@ def one_file_refpix(allInput):
     refObject.correct_amp_refs()
     refObject.calc_avg_cols(avg_type='pixel')
     refObject.calc_col_smooth(savgol=True)
-    refObject.correct_col_refs()
+    if refObject.refs_side_avg is None:
+        pass ## can't do side ref correction with no side ref pixels
+    else:
+        refObject.correct_col_refs()
+    
     useDat = refObject.data
     header['REFPIX'] = (True,'pynrc reference pixel applied?')
     outName = os.path.join(saveDir,fileName)
