@@ -1,0 +1,21 @@
+fileList: /fenrirdata1/Sept2019/original_fits_output/*.fits
+logFile: /fenrirdata1/Sept2019/original_fits_output/log_files/ExposureLog_AzLab.log
+expStart:
+    BASELINE6P0MAEXP1: "2019-10-01T18:32:27"
+    BASELINE6P0MAEXP2: "2019-10-01T21:55:37"
+    BASELINE6P0MAEXP3: "2019-10-02T01:18:43"
+    BASELINE6P0MAEXP4: "2019-10-02T04:41:51"
+COLCORNR: 1
+ROWCORNR: 1793
+xpix: 2048
+ypix: 256
+wind_mode: 'STRIPE'
+nint: 1000
+ngroup: 8
+nf: 1
+read_mode: 'RAPID'
+teledyneID:
+    487: 17160
+    488: 17114
+    489: 17120
+    490: 17117

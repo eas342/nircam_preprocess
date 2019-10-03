@@ -19,7 +19,7 @@ detectorDict = {481: "NRCA1", 482: "NRCA2", 483: "NRAC3", 484: "NRCA4",
                 486: "NRCA1", 487: "NRCB2", 488: "NRCB3", 489: "NRCB4",
                 490: "NRCB5"}
 
-def fix_headers(testMode=True):
+def fix_headers(testMode=False):
     """ Fix the headers of the fitsWriter files since they need updating usually
     Parameters
     -----------
