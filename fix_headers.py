@@ -19,28 +19,19 @@ detectorDict = {481: "NRCA1", 482: "NRCA2", 483: "NRAC3", 484: "NRCA4",
                 486: "NRCA1", 487: "NRCB2", 488: "NRCB3", 489: "NRCB4",
                 490: "NRCB5"}
 
-def fix_headers(testMode=False):
+def fix_headers(hParams,testMode=False):
     """ Fix the headers of the fitsWriter files since they need updating usually
     Parameters
     -----------
+    hParams: dict
+        Dictionary of header fixing parameters
+
     testMode: bool
         Do a dry run before modifying headers?
     """
     
-    with open('parameters/header_fixes.yaml') as f:
-        hParams = yaml.safe_load(f)
     
     fileList = glob.glob(hParams['fileList'])
-    detTiming = pynrc.pynrc_core.DetectorOps(detector=481,
-                                             wind_mode=hParams['wind_mode'],
-                                             xpix=hParams['xpix'],
-                                             ypix=hParams['ypix'],
-                                             x0=hParams['COLCORNR']-1,
-                                             y0=hParams['ROWCORNR']-1,
-                                             nint=hParams['nint'],
-                                             ngroup=hParams['ngroup'],
-                                             nf=hParams['nf'])
-    correctHead = detTiming.make_header()
     for oneFile in fileList:
         with fits.open(oneFile,'update') as HDUList_orig:
             if testMode == True:
@@ -49,7 +40,21 @@ def fix_headers(testMode=False):
                 primHead = HDUList[0].header
             else:
                 primHead = HDUList_orig[0].header
+
+            colcorner = hParams['COLCORNR'][primHead['SCA_ID']]
+            rowcorner = hParams['ROWCORNR'][primHead['SCA_ID']]
             
+            detTiming = pynrc.pynrc_core.DetectorOps(detector=481,
+                                                     wind_mode=hParams['wind_mode'],
+                                                     xpix=hParams['xpix'],
+                                                     ypix=hParams['ypix'],
+                                                     x0=colcorner-1,
+                                                     y0=rowcorner-1,
+                                                     nint=hParams['nint'],
+                                                     ngroup=hParams['ngroup'],
+                                                     nf=hParams['nf'])
+            correctHead = detTiming.make_header()
+
             obsId = primHead['OBS_ID']
             if obsId in hParams['expStart'].keys():
                 expStart = hParams['expStart'][obsId]
@@ -79,8 +84,13 @@ def fix_headers(testMode=False):
             primHead['DETECTOR'] = detectorDict[primHead['SCA_ID']]
             
             primHead['TLDYNEID'] = hParams['teledyneID'][primHead['SCA_ID']]
-        
+            if testMode == True:
+                pdb.set_trace()
 
 
 if __name__ == "__main__":
-    fix_headers()
+    with open('parameters/header_fixes.yaml') as f:
+        hParams = yaml.safe_load(f)
+
+    fix_headers(hParams)
+    
