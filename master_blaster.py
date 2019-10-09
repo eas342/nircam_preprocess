@@ -1,5 +1,6 @@
 import do_refpix
 import make_syml
+import fix_headers
 import glob
 import os
 from subprocess import call
@@ -14,6 +15,18 @@ import sys
 def run_all(pipeParamsFileName='parameters/pipe_params.yaml'):
     with open(pipeParamsFileName) as pipeParamFile:
         pipeParams = yaml.safe_load(pipeParamFile)
+
+    ## set the default parameters
+    defaultDict = {"fixHeaders": False, "pynrcRefpix": True}
+    for oneKey in defaultDict.keys():
+        if oneKey not in pipeParams:
+            pipeParams[oneKey] = defaultDict[oneKey]
+    
+    
+    ## Fix headers
+    if pipeParams['fixHeaders'] == True:
+        fix_headers.fix_headers(pipeParams['headerFixParams'])
+    
     
     origFiles = pipeParams['originalFiles']
     
