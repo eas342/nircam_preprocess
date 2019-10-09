@@ -54,6 +54,8 @@ if len(argv) >= 3:
         rawdir = 'full_ref_raw_separated_'+argv[1] + '/'
     elif argv[2] == 'refpix':
         rawdir = 'raw_separated_{}_refpix/'.format(argv[1])
+    elif argv[2] == 'custom':
+        rawdir = 'raw_separated_{}_custom/'.format(argv[1])
     elif argv[2] == 'backsub_by_frame':
         rawdir = 'raw_separated_{}_backsub_by_frame/'.format(argv[1])
     else:
