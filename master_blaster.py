@@ -22,11 +22,10 @@ def run_all(pipeParamsFileName='parameters/pipe_params.yaml'):
         if oneKey not in pipeParams:
             pipeParams[oneKey] = defaultDict[oneKey]
     
-    
     ## Fix headers
     if pipeParams['fixHeaders'] == True:
+        pipeParams['headerFixParams']['fileList'] = pipeParams['originalFiles']
         fix_headers.fix_headers(pipeParams['headerFixParams'])
-    
     
     origFiles = pipeParams['originalFiles']
     
