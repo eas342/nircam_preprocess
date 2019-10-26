@@ -2,6 +2,7 @@ import glob
 import numpy as np
 import os
 from astropy.io import fits, ascii
+from astropy.table import Table
 import yaml
 from shutil import copyfile
 import pdb
@@ -16,14 +17,24 @@ with open(paramFile) as paramFileOpen:
 
 baseDir = os.path.join(pipeParam['symLinkDir'])
 procDir = os.path.join(baseDir,'raw_separated_MMM_refpix')
+
+## make all output directories
 outputDir = os.path.join(baseDir,'slope_post_process')
-if os.path.exists(outputDir) == False:
-    os.mkdir(outputDir)
+flatDir = os.path.join(baseDir,'flat_fields')
+dividedDir = os.path.join(baseDir,'flat_fielded')
+for onePath in [outputDir,flatDir,dividedDir]:
+    if os.path.exists(onePath) == False:
+        os.mkdir(onePath)
+
 
 if 'rowsUse' not in pipeParam:
     pipeParam['rowsUse'] = [[0,80],[140,256]]
 if 'colsUse' not in pipeParam:
     pipeParam['colsUse'] = [[4,190]]
+
+
+if 'indices_for_flatfield' not in pipeParam:
+    pipeParam['indices_for_flatfield'] = [None, None]
 
 
 def do_subtraction(inputPath,outFilePath,diagnostics=False):
@@ -97,7 +108,52 @@ def subtract_all_files():
             outFilePath = os.path.join(outputTestDir,filePrefix+'_rowcolsub.fits')
             outHDU = do_subtraction(oneFile,outFilePath)
             
+
+def find_flat_fields():
+    testNames = os.listdir(procDir)
+    
+    for testInd,oneTest in enumerate(testNames):
+        print("Working on Exposure {} ({} of {})".format(oneTest,testInd,len(testNames)))
+        inputTestDir = os.path.join(procDir,oneTest)
+        outputTestDir = os.path.join(flatDir,oneTest)
+        if os.path.exists(outputTestDir) == False:
+            os.mkdir(outputTestDir)
+        fullFileL = np.sort(glob.glob(os.path.join(inputTestDir,'*.slp.fits')))
+        if pipeParam['indices_for_flatfield'][0] is None:
+            startP = 0
+        else:
+            startP = pipeParam['indices_for_flatfield'][0]
+        if pipeParam['indices_for_flatfield'][1] is None:
+            endP = len(fullFileL) - 1
+        else:
+            endP = pipeParam['indices_for_flatfield'][1]
+        fileL = fullFileL[startP:endP]
+        nFile = len(fileL)
+        firstHead = fits.getheader(fileL[0])
+        allSlopes = np.zeros([nFile,firstHead['NAXIS2'],firstHead['NAXIS1']])
+        for fileInd,oneFile in enumerate(fileL):
+            if np.mod(fileInd,50) == 0:
+                print("Reading integration {} of {}".format(fileInd,len(fileL)))
+            oneImg = fits.getdata(oneFile)
+            allSlopes[fileInd,:,:] = oneImg[0]
         
+        avgSlope = np.mean(allSlopes,axis=0)
+        normalization = np.percentile(avgSlope,90)
+        flatImg = avgSlope / normalization
+        primHDU = fits.PrimaryHDU(avgSlope,header=firstHead)
+        primHDU.header['NORMFLUX'] = (normalization, "Normalization divisor for flat field")
+        primHDU.name = 'FLAT'
+        
+        ## save the filenames used
+        t = Table()
+        t['Filenames'] = fileL
+        tableHDU = fits.BinTableHDU(t)
+        tableHDU.name = 'FILENAMES'
+        HDUList = fits.HDUList([primHDU,tableHDU])
+        
+        flatName = os.path.join(outputTestDir,'flat_for_{}.fits'.format(oneTest))
+        HDUList.writeto(flatName,overwrite=True)
+    
         
 if __name__ == '__main__':
     subtract_all_files()
