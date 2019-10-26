@@ -140,7 +140,7 @@ def find_flat_fields():
         avgSlope = np.mean(allSlopes,axis=0)
         normalization = np.percentile(avgSlope,90)
         flatImg = avgSlope / normalization
-        primHDU = fits.PrimaryHDU(avgSlope,header=firstHead)
+        primHDU = fits.PrimaryHDU(flatImg,header=firstHead)
         primHDU.header['NORMFLUX'] = (normalization, "Normalization divisor for flat field")
         primHDU.name = 'FLAT'
         
