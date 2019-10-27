@@ -153,7 +153,40 @@ def find_flat_fields():
         
         flatName = os.path.join(outputTestDir,'flat_for_{}.fits'.format(oneTest))
         HDUList.writeto(flatName,overwrite=True)
+
+def divide_all_files():
+    """
+    Divide all files by a flat field from the flat field directory
+    """
+    testNames = os.listdir(procDir)
     
+    for testInd,oneTest in enumerate(testNames):
+        print("Working on Exposure {} ({} of {})".format(oneTest,testInd,len(testNames)))
+        inputTestDir = os.path.join(procDir,oneTest)
+        outputTestDir = os.path.join(dividedDir,oneTest)
+        calDir = os.path.join(flatDir,oneTest)
+        if os.path.exists(outputTestDir) == False:
+            os.mkdir(outputTestDir)
+        fileL = np.sort(glob.glob(os.path.join(inputTestDir,'*.slp.fits')))
+
+        flatName = os.path.join(calDir,'flat_for_{}.fits'.format(oneTest))
+        flat_field = fits.getdata(flatName)
+        
+        for fileInd,oneFile in enumerate(fileL):
+            if np.mod(fileInd,50) == 0:
+                print("Working on integration {} of {}".format(fileInd,len(fileL)))
+            filePrefix = os.path.splitext(os.path.basename(oneFile))[0]
+            outFilePath = os.path.join(outputTestDir,filePrefix+'_ff.fits')
+            
+            HDUListorig = fits.open(oneFile)
+            reducedSlope = HDUListorig[0].data[0] / flat_field
+            outHDU = fits.PrimaryHDU(reducedSlope,header=HDUListorig[0].header)
+            outHDU.header['FFDIVIDE'] = (True, 'Data divided by flat field?')
+            outHDU.header['FFNAME'] = ('flat_for_{}.fits'.format(oneTest), 'Name of flat field')
+            outHDU.writeto(outFilePath,overwrite=True)
+            HDUListorig.close()
+
+
         
 if __name__ == '__main__':
     subtract_all_files()
