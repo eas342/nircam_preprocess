@@ -19,10 +19,10 @@ baseDir = os.path.join(pipeParam['symLinkDir'])
 procDir = os.path.join(baseDir,'raw_separated_MMM_refpix')
 
 ## make all output directories
-outputDir = os.path.join(baseDir,'slope_post_process')
+rowColSubDir = os.path.join(baseDir,'slope_post_process')
 flatDir = os.path.join(baseDir,'flat_fields')
 dividedDir = os.path.join(baseDir,'flat_fielded')
-for onePath in [outputDir,flatDir,dividedDir]:
+for onePath in [rowColSubDir,flatDir,dividedDir]:
     if os.path.exists(onePath) == False:
         os.mkdir(onePath)
 
@@ -172,7 +172,7 @@ def subtract_all_files():
     for testInd,oneTest in enumerate(testNames):
         print("Working on Exposure {} ({} of {})".format(oneTest,testInd,len(testNames)))
         inputTestDir = os.path.join(procDir,oneTest)
-        outputTestDir = os.path.join(outputDir,oneTest)
+        outputTestDir = os.path.join(rowColSubDir,oneTest)
         
         if os.path.exists(outputTestDir) == False:
             os.mkdir(outputTestDir)
@@ -184,17 +184,48 @@ def subtract_all_files():
             outFilePath = os.path.join(outputTestDir,filePrefix+'_rowcolsub.fits')
             outHDU = do_subtraction(oneFile,outFilePath)
             
+def get_files_for_flat_fielding(oneTest,useRowCol=True):
+    """
+    Get files for flat fielding
+    
+    Parameters
+    -----------
+    oneTest: string
+       Name of the exposure directory
+    
+    useRowCol: bool
+       Use data where columns and rows have been subtracted?
+    """
+    if useRowCol == True:
+        inputTestDir = os.path.join(rowColSubDir,oneTest)
+        wildCard = '*.slp_rowcolsub.fits'
+    else:
+        inputTestDir = os.path.join(procDir,oneTest)
+        wildCard = '*.slp.fits'
+    
+    return wildCard, inputTestDir
 
-def find_flat_fields():
+def find_flat_fields(useRowCol=True):
+    """
+    Find flat fields for a given set of indices
+    
+    Parameters
+    -----------
+    useRowCol: bool
+       Use data that has had rows and columns subtracted?
+    
+    """
     testNames = os.listdir(procDir)
     
     for testInd,oneTest in enumerate(testNames):
         print("Working on Exposure {} ({} of {})".format(oneTest,testInd,len(testNames)))
-        inputTestDir = os.path.join(procDir,oneTest)
+        wildCard, inputTestDir = get_files_for_flat_fielding(oneTest,useRowCol)
+        
         outputTestDir = os.path.join(flatDir,oneTest)
         if os.path.exists(outputTestDir) == False:
             os.mkdir(outputTestDir)
-        fullFileL = np.sort(glob.glob(os.path.join(inputTestDir,'*.slp.fits')))
+        fullFileL = np.sort(glob.glob(os.path.join(inputTestDir,wildCard)))
+        
         if pipeParam['indices_for_flatfield'][0] is None:
             startP = 0
         else:
@@ -211,7 +242,10 @@ def find_flat_fields():
             if np.mod(fileInd,50) == 0:
                 print("Reading integration {} of {}".format(fileInd,len(fileL)))
             oneImg = fits.getdata(oneFile)
-            allSlopes[fileInd,:,:] = oneImg[0]
+            if useRowCol == True:
+                allSlopes[fileInd,:,:] = oneImg ## a 2D image
+            else:
+                allSlopes[fileInd,:,:] = oneImg[0] ## a 3D cube
         
         avgSlope = np.mean(allSlopes,axis=0)
         normalization = np.percentile(avgSlope,90)
@@ -230,20 +264,27 @@ def find_flat_fields():
         flatName = os.path.join(outputTestDir,'flat_for_{}.fits'.format(oneTest))
         HDUList.writeto(flatName,overwrite=True)
 
-def divide_all_files():
+def divide_all_files(useRowCol=True):
     """
-    Divide all files by a flat field from the flat field directory
+    Divide each image by flat field for a given set of indices
+    
+    Parameters
+    -----------
+    useRowCol: bool
+       Use data that has had rows and columns subtracted?
+    
     """
     testNames = os.listdir(procDir)
     
     for testInd,oneTest in enumerate(testNames):
         print("Working on Exposure {} ({} of {})".format(oneTest,testInd,len(testNames)))
-        inputTestDir = os.path.join(procDir,oneTest)
+        wildCard, inputTestDir = get_files_for_flat_fielding(oneTest,useRowCol)
+        
         outputTestDir = os.path.join(dividedDir,oneTest)
         calDir = os.path.join(flatDir,oneTest)
         if os.path.exists(outputTestDir) == False:
             os.mkdir(outputTestDir)
-        fileL = np.sort(glob.glob(os.path.join(inputTestDir,'*.slp.fits')))
+        fileL = np.sort(glob.glob(os.path.join(inputTestDir,wildCard)))
 
         flatName = os.path.join(calDir,'flat_for_{}.fits'.format(oneTest))
         flat_field = fits.getdata(flatName)
@@ -255,7 +296,12 @@ def divide_all_files():
             outFilePath = os.path.join(outputTestDir,filePrefix+'_ff.fits')
             
             HDUListorig = fits.open(oneFile)
-            reducedSlope = HDUListorig[0].data[0] / flat_field
+            if useRowCol == True:
+                origData = HDUListorig[0].data ## a 2D image
+            else:
+                origData = HDUListorig[0].data[0] ## a 3D cube
+            
+            reducedSlope = origData / flat_field
             outHDU = fits.PrimaryHDU(reducedSlope,header=HDUListorig[0].header)
             outHDU.header['FFDIVIDE'] = (True, 'Data divided by flat field?')
             outHDU.header['FFNAME'] = ('flat_for_{}.fits'.format(oneTest), 'Name of flat field')
