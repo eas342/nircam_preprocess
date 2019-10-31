@@ -22,7 +22,9 @@ procDir = os.path.join(baseDir,'raw_separated_MMM_refpix')
 rowColSubDir = os.path.join(baseDir,'slope_post_process')
 flatDir = os.path.join(baseDir,'flat_fields')
 dividedDir = os.path.join(baseDir,'flat_fielded')
-for onePath in [rowColSubDir,flatDir,dividedDir]:
+profileDir = os.path.join(baseDir,'profiles')
+
+for onePath in [rowColSubDir,flatDir,dividedDir,profileDir]:
     if os.path.exists(onePath) == False:
         os.mkdir(onePath)
 
@@ -38,10 +40,33 @@ if 'colsUse' not in pipeParam:
                             489: [[4,190]],
                             490: [[4,190]]}
 
+if 'profileXRange' not in pipeParam:
+    pipeParam['profileXRange'] = {487: [   4, 1050],
+                                  488: [   4, 1877],
+                                  489: [ 160, 2043],
+                                  490: [1040, 2043]}
+
+if 'profileYRange' not in pipeParam:
+    pipeParam['profileYRange'] = {487: [0, 251],
+                                  488: [0, 160],
+                                  489: [0, 169],
+                                  490: [0, 251]}
 
 if 'indices_for_flatfield' not in pipeParam:
     pipeParam['indices_for_flatfield'] = [None, None]
 
+
+def get_param_from_scaID(head,lookupDict):
+    """
+    Get the SCA ID from the header
+    """
+    if 'SCA_ID' not in head:
+        raise Exception("Could not find SCA ID")
+    elif head['SCA_ID'] not in lookupDict.keys():
+        raise Exception("Could not find parameters for SCA {}".format(head['SCA_ID']))
+    else:
+        return lookupDict[head['SCA_ID']]
+    
 
 def do_subtraction(inputPath,outFilePath,diagnostics=False):
     """
@@ -66,15 +91,8 @@ def do_subtraction(inputPath,outFilePath,diagnostics=False):
     
     ## Look up which rows and columns to median based on SCA ID
     ## (different for different images)
-    if 'SCA_ID' not in head:
-        raise Exception("Could not find SCA ID")
-    elif head['SCA_ID'] not in pipeParam['rowsUse'].keys():
-        raise Exception("Could not find rows for SCA {}".format(head['SCA_ID']))
-    elif head['SCA_ID'] not in pipeParam['colsUse'].keys():
-        raise Exception("Could not find columns for SCA {}".format(head['SCA_ID']))
-    else:
-        rowsToMedian = pipeParam['rowsUse'][head['SCA_ID']]
-        colsToMedian = pipeParam['colsUse'][head['SCA_ID']]
+    rowsToMedian = get_param_from_scaID(head,pipeParam['rowsUse'])
+    colsToMedian = get_param_from_scaID(head,pipeParam['colsUse'])
     
     ## Copy the original image
     correctedImage = deepcopy(img)
@@ -309,6 +327,42 @@ def divide_all_files(useRowCol=True):
             HDUListorig.close()
 
 
+def extract_illum_profiles():
+    """
+    Extract illumination profiles for all images
+    """
+    testNames = os.listdir(procDir)
+    
+    for testInd,oneTest in enumerate(testNames):
+        print("Working on Exposure {} ({} of {})".format(oneTest,testInd,len(testNames)))
+        inputTestDir = os.path.join(dividedDir,oneTest)
+        
+        fileList = np.sort(glob.glob(os.path.join(inputTestDir,'*rowcolsub_ff.fits')))
+        
+        nFile = len(fileList)
+    
+        head = fits.getheader(fileList[0])
+        xRange = get_param_from_scaID(head,pipeParam['profileXRange'])
+        yRange = get_param_from_scaID(head,pipeParam['profileYRange'])
+        
+        xCoordinates = np.arange(xRange[0],xRange[1])
+        profileArray = np.zeros([nFile,xRange[1] - xRange[0]])
+        
+        for ind,oneFile in enumerate(fileList):
+            if np.mod(ind,50) == 0:
+                print("Reading integration {} of {}".format(ind,nFile))
+            
+            img = fits.getdata(oneFile)
+            profile = np.mean(img[yRange[0]:yRange[1],xRange[0]:xRange[1]],axis=0)
+            profileArray[ind,:] = profile
+        
+        head = fits.getheader(fileList[0])
+        primHDU = fits.PrimaryHDU(profileArray,head)
+        xCoordHDU = fits.ImageHDU(xCoordinates)
+        
+        HDUList = fits.HDUList([primHDU,xCoordHDU])
+        HDUList.writeto(os.path.join(profileDir,'profiles_for_{}.fits'.format(oneTest)),overwrite=True)
+    
         
 if __name__ == '__main__':
     subtract_all_files()
