@@ -362,7 +362,12 @@ def extract_illum_profiles():
         
         HDUList = fits.HDUList([primHDU,xCoordHDU])
         HDUList.writeto(os.path.join(profileDir,'profiles_for_{}.fits'.format(oneTest)),overwrite=True)
-    
+
+def all_post_slope_steps():
+    subtract_all_files()
+    find_flat_fields()
+    divide_all_files
+    extract_illum_profiles()
         
 if __name__ == '__main__':
     subtract_all_files()
