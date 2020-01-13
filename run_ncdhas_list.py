@@ -158,7 +158,13 @@ for dirNow in raw_files.keys():
         head = fits.getheader(fileNOW)
         if argv[1][2] == 'P':
             if (head['DETECTOR'] == 'NRCALONG'):
-                flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
+                if 'FILTER' in head:
+                    if head['FILTER'] == 'F322W2':
+                        flatsuffix = '*F322W2_CLEAR_2016-04-05.fits'
+                    else:
+                        flatsuffix = '*F444W_CLEAR_2016-04-05.fits'                        
+                else:
+                    flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
                 detectorName = 'NRCA5'
             elif (head['DETECTOR'] == 'NRCBLONG'):
                 flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
