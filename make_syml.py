@@ -72,7 +72,29 @@ def dms_to_fitswriter_head(head):
     elif head['DETECTOR'] == 'NRCALONG':
         head['SCA_ID'] = (485, 'Detector ID')
     else:
-        raise NotImplementedError("Need to add this detector")
+        raise Exception("Need to add this detector {}".format(head['DETECTOR']))
+    
+    if 'SUBARRAY' not in head:
+        raise Exception("Couldn't find subarray name in head to place subarray")
+    elif head['SUBARRAY'] == 'FULL':
+        head['COLCORNR'] = (1, "Starting column number")
+        head['ROWCORNR'] = (1, "Starting row number")
+        head['TREFROW'] = (4,'top reference pixel rows   ')
+        head['BREFROW'] = (4,'bottom reference pixel rows')
+        head['LREFCOL'] = (4,'left col reference pixels  ')
+        head['RREFCOL'] = (4,'right col reference pixels ')
+    
+    elif 'SUBGRISM' in head['SUBARRAY']:
+        head['COLCORNR'] = (1, "Starting column number")
+        head['ROWCORNR'] = (1, "Starting row number")
+        head['TREFROW'] = (0,'top reference pixel rows   ')
+        head['BREFROW'] = (4,'bottom reference pixel rows')
+        head['LREFCOL'] = (4,'left col reference pixels  ')
+        head['RREFCOL'] = (4,'right col reference pixels ')
+    else:
+        raise Exception("Need to add this subarray {}".format(head['SUBARRAY']))
+    
+    head['READOUT'] = (head['READPATT'], 'Readout pattern')
     
     return head
 
