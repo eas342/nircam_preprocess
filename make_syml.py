@@ -14,6 +14,8 @@ if os.path.exists(paramFile) == False:
 with open(paramFile) as paramFileOpen:
     symLinkParam = yaml.safe_load(paramFileOpen)
 
+if 'dmsConvert' not in symLinkParam:
+    symLinkParam['dmsConvert'] = False
 
 defaultDirSearch = '/surtrdata/Local/AZLab/Dark/Test2/*.fits'
 def build_files(dirSearch=defaultDirSearch):
@@ -32,6 +34,58 @@ def build_files(dirSearch=defaultDirSearch):
 
 defaultBreaknint = ('/surtrdata1/tso_analysis/AZLab_darks/rpi_vs_rpf_all/'+
                     'NRCTEST2RPF_1_487_S_2019-05-30T21h50m51/NRCTEST2RPF_1_487_S_2019-05-30T21h50m51.fits')
+
+def merge_headers(head_prim,head_sci):
+    """ This function merges the Primary and Science headers from the DMS format
+    
+    """
+    dontCopy = ['SIMPLE','BITPIX','NAXIS','EXTEND']
+    
+    head = fits.Header(head_sci)
+    head.append(('',''),end=True)
+    head.append(('',''),end=True)
+    head.append(('','     Primary Header Stuff '),end=True)
+    head.append(('',''),end=True)
+    head.append(('',''),end=True)
+    for card in head_prim.cards:
+        if card[0] not in dontCopy:
+            head.append((card[0],card[1],card[2]),end=True)
+    
+    return head
+
+
+def dms_plurals_to_singlular(head):
+    """
+    This adds the singular header keyword used in Fitswriter
+    ie. NGROUP = NGROUPS
+    """
+    plurals = ['NINTS','NFRAMES','NGROUPS']
+    for onePlural in plurals:
+        singular = onePlural[:-1]
+        head[singular] = (head[onePlural],head.comments[onePlural])
+    return head
+
+def dms_to_fitswriter_head(head):
+    head = dms_plurals_to_singlular(head)
+    if 'DETECTOR' not in head:
+        raise Exception("Couldn't find detector name to know how to assign SCA_ID")
+    elif head['DETECTOR'] == 'NRCALONG':
+        head['SCA_ID'] = (485, 'Detector ID')
+    else:
+        raise NotImplementedError("Need to add this detector")
+    
+    return head
+
+def flip_data(data,head):
+    """ This flips the detector coordinates from DMS to the Fitswriter way"""
+    
+    if 'DETECTOR' not in head:
+        raise Exception("Couldn't find detector name to know how to flip")
+    elif head['DETECTOR'] == 'NRCALONG':
+        return data[:,:,::-1]
+    else:
+        raise NotImplementedError("Need to add this detector")
+
 
 def breaknint(fitsFile=defaultBreaknint):
     """
@@ -70,20 +124,42 @@ def breaknint(fitsFile=defaultBreaknint):
           Summer 2019 - converting to Python (eas342@email.arizona.edu)
     """
     HDUList = fits.open(fitsFile)
-    head = HDUList[0].header
-    dat = HDUList[0].data
     
-    # Get data axes
-    nx = dat.shape[2]
-    ny = dat.shape[1]
-    nr = dat.shape[0]
+    if symLinkParam['dmsConvert'] == True:
+        ## combine the header info together
+        head_prim = HDUList[0].header
+        head_sci = HDUList['SCI'].header
+        
+        head = merge_headers(head_prim,head_sci)
+        head = dms_to_fitswriter_head(head)
+        
+        dat = HDUList['SCI'].data
+        nr = dat.shape[0] * dat.shape[1]
+        
+    else:
+            
+        head = HDUList[0].header
+        dat = HDUList[0].data
+    
+        # Get data axes
+        nx = dat.shape[2]
+        ny = dat.shape[1]
+        nr = dat.shape[0]
     
     # Check nint
     if "NINT" in head:
-        nint = head["NINT"]
-        if nint == 1:  # not a packed data cube
-            print("NINT is {}; {} is not a packed data cube.".format(nint,fitsFile))
-            print("Going to create just one int file")
+        if symLinkParam['dmsConvert'] == True:
+            int_start_num = head['INTSTART'] ## starting integration number for the segment
+            ## use the value packed into the segment/file (not total)
+            nint = head['INTEND'] - int_start_num + 1
+            nint_orig = head['NINTS'] ## original number of integrations in exposure
+        else:
+            nint = head["NINT"]
+            if nint == 1:  # not a packed data cube
+                print("NINT is {}; {} is not a packed data cube.".format(nint,fitsFile))
+                print("Going to create just one int file")
+            int_start_num = 1
+            nint_orig = nint
     else:
         print("Keyword NINT not found; can't split data up.")
         return
@@ -111,7 +187,6 @@ def breaknint(fitsFile=defaultBreaknint):
             return
     
     # start your engines. 
-    dat = HDUList[0].data
     BaseName = os.path.splitext(fitsFile)[0]
     print(fitsFile)
     print(BaseName)
@@ -123,17 +198,25 @@ def breaknint(fitsFile=defaultBreaknint):
         
         FullHeader=deepcopy(head)
         
-        tmpStr="{:04d}".format(i)
-        # Get this block on nint
-        if nint == 1:
-            _thisint = dat
+        tmpStr="{:05d}".format(i+int_start_num-1)
+        
+        if symLinkParam['dmsConvert'] == True:
+            _thisint = flip_data(dat[i],head)
         else:
-            _thisint = dat[z0:z1+1]
+            # Get this block on nint
+            if nint == 1:
+                _thisint = dat
+            else:
+                _thisint = dat[z0:z1+1]
         _thisheader = FullHeader
         _thisfile = BaseName + '_I' + tmpStr + '.fits'
         _thisheader['NINT'] = 1 # set nint to 1
-        _thisheader.insert("NINT",("ON_NINT",i+1,"This is INT of TOT_NINT"))
-        _thisheader.insert("ON_NINT",("TOT_NINT",nint,"Total number of NINT in original file"))
+        _thisheader.insert("NINT",("ON_NINT",i+int_start_num,"This is INT of TOT_NINT"))
+        _thisheader.insert("ON_NINT",("TOT_NINT",nint_orig,"Total number of NINT in original exposure"))
+        if symLinkParam['dmsConvert'] == True:
+            ## keep track of yet another NINT, which is for the total exposure
+            _thisheader.insert("TOT_NINT",("SEGNINT",nint,"Total number of NINT in the segment or file"))
+        
         _thisheader["COMMENT"] = 'Extracted from a multi-integration file by ParseIntegration.pro'
         outHDU = fits.PrimaryHDU(_thisint,header=_thisheader)
         if os.path.exists(_thisfile):
