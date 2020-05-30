@@ -54,6 +54,8 @@ if len(argv) >= 3:
         rawdir = 'full_ref_raw_separated_'+argv[1] + '/'
     elif argv[2] == 'refpix':
         rawdir = 'raw_separated_{}_refpix/'.format(argv[1])
+    elif argv[2] == 'custom':
+        rawdir = 'raw_separated_{}_custom/'.format(argv[1])
     elif argv[2] == 'backsub_by_frame':
         rawdir = 'raw_separated_{}_backsub_by_frame/'.format(argv[1])
     else:
@@ -156,7 +158,13 @@ for dirNow in raw_files.keys():
         head = fits.getheader(fileNOW)
         if argv[1][2] == 'P':
             if (head['DETECTOR'] == 'NRCALONG'):
-                flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
+                if 'FILTER' in head:
+                    if head['FILTER'] == 'F322W2':
+                        flatsuffix = '*F322W2_CLEAR_2016-04-05.fits'
+                    else:
+                        flatsuffix = '*F444W_CLEAR_2016-04-05.fits'                        
+                else:
+                    flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
                 detectorName = 'NRCA5'
             elif (head['DETECTOR'] == 'NRCBLONG'):
                 flatsuffix = '*F444W_CLEAR_2016-04-05.fits'
