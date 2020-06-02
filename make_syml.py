@@ -3,6 +3,7 @@ import numpy as np
 from subprocess import call
 import os
 from astropy.io import fits
+from astropy.table import Table
 import yaml
 from shutil import copyfile
 import pdb
@@ -62,7 +63,7 @@ def dms_plurals_to_singlular(head):
     plurals = ['NINTS','NFRAMES','NGROUPS']
     for onePlural in plurals:
         singular = onePlural[:-1]
-        head[singular] = (head[onePlural],head.comments[onePlural])
+        head.insert(onePlural,(singular,head[onePlural],head.comments[onePlural]))
     return head
 
 def dms_to_fitswriter_head(head):
@@ -70,31 +71,41 @@ def dms_to_fitswriter_head(head):
     if 'DETECTOR' not in head:
         raise Exception("Couldn't find detector name to know how to assign SCA_ID")
     elif head['DETECTOR'] == 'NRCALONG':
-        head['SCA_ID'] = (485, 'Detector ID')
+        head.insert('DETECTOR',('SCA_ID',485, 'Detector ID'),after=True)
+        
+        head['SUBSTRT1'] = (2048, "Starting pixel column number DMS orientation")
+        head['SUBSTRT2'] = (1, "Starting pixel row number DMS orientation")
+        head.insert('SUBSTRT2',('COLCORNR',1, "Starting column number"),after=True)
+        head.insert('COLCORNR',('ROWCORNR',1,"Starting row number"),after=True)
+        
+        if 'SUBARRAY' not in head:
+            raise Exception("Couldn't find subarray name in head to place subarray")
+        else:
+            if head['SUBARRAY'] == 'FULL':
+                head.insert('COLCORNR',('TREFROW',4,'top reference pixel rows   '))
+                head.insert('COLCORNR',('BREFROW',4,'bottom reference pixel rows'))
+                head.insert('COLCORNR',('LREFCOL',4,'left col reference pixels  '))
+                head.insert('COLCORNR',('RREFCOL',4,'right col reference pixels '))
+                head.insert("SUBSTRT2", ('HWINMODE','DISABLE','Horizontal window mode enabled?'),after=True)
+            
+            elif 'SUBGRISM' in head['SUBARRAY']:
+                head.insert('COLCORNR',('TREFROW',0,'top reference pixel rows   '))
+                head.insert('COLCORNR',('BREFROW',4,'bottom reference pixel rows'))
+                head.insert('COLCORNR',('LREFCOL',4,'left col reference pixels  '))
+                head.insert('COLCORNR',('RREFCOL',4,'right col reference pixels '))
+                head.insert("SUBSTRT2", ('HWINMODE','DISABLE','Horizontal window mode enabled?'),after=True)
+            else:
+                raise Exception("Need to add this subarray {}".format(head['SUBARRAY']))
+            
+            ## change to FITWriter subarray name
+            head.insert("SUBARRAY",("SUBORIGN",head['SUBARRAY'],'Original DMS subarray name'),after=True)
+            head['SUBARRAY'] = (True, "Is this a subarray?")
+            
     else:
         raise Exception("Need to add this detector {}".format(head['DETECTOR']))
     
-    if 'SUBARRAY' not in head:
-        raise Exception("Couldn't find subarray name in head to place subarray")
-    elif head['SUBARRAY'] == 'FULL':
-        head['COLCORNR'] = (1, "Starting column number")
-        head['ROWCORNR'] = (1, "Starting row number")
-        head['TREFROW'] = (4,'top reference pixel rows   ')
-        head['BREFROW'] = (4,'bottom reference pixel rows')
-        head['LREFCOL'] = (4,'left col reference pixels  ')
-        head['RREFCOL'] = (4,'right col reference pixels ')
     
-    elif 'SUBGRISM' in head['SUBARRAY']:
-        head['COLCORNR'] = (1, "Starting column number")
-        head['ROWCORNR'] = (1, "Starting row number")
-        head['TREFROW'] = (0,'top reference pixel rows   ')
-        head['BREFROW'] = (4,'bottom reference pixel rows')
-        head['LREFCOL'] = (4,'left col reference pixels  ')
-        head['RREFCOL'] = (4,'right col reference pixels ')
-    else:
-        raise Exception("Need to add this subarray {}".format(head['SUBARRAY']))
-    
-    head['READOUT'] = (head['READPATT'], 'Readout pattern')
+    head.insert('READPATT',('READOUT',head['READPATT'], 'Readout pattern'),after=True)
     
     return head
 
@@ -158,6 +169,7 @@ def breaknint(fitsFile=defaultBreaknint):
         dat = HDUList['SCI'].data
         nr = dat.shape[0] * dat.shape[1]
         
+        times_tab = Table(HDUList['INT_TIMES'].data)
     else:
             
         head = HDUList[0].header
@@ -232,12 +244,18 @@ def breaknint(fitsFile=defaultBreaknint):
                 _thisint = dat[z0:z1+1]
         _thisheader = FullHeader
         _thisfile = BaseName + '_I' + tmpStr + '.fits'
-        _thisheader['NINT'] = 1 # set nint to 1
-        _thisheader.insert("NINT",("ON_NINT",i+int_start_num,"This is INT of TOT_NINT"))
-        _thisheader.insert("ON_NINT",("TOT_NINT",nint_orig,"Total number of NINT in original exposure"))
+        _thisheader.insert("NINT",("ON_NINT",i+int_start_num,"This is INT of TOT_NINT"),after=True)
+        _thisheader.insert("ON_NINT",("TOT_NINT",nint_orig,"Total number of NINT in original exposure"),after=True)
         if symLinkParam['dmsConvert'] == True:
             ## keep track of yet another NINT, which is for the total exposure
-            _thisheader.insert("TOT_NINT",("SEGNINT",nint,"Total number of NINT in the segment or file"))
+            _thisheader.insert("TOT_NINT",("SEGNINT",nint,"Total number of NINT in the segment or file"),after=True)
+            ## grab the 
+            _thisheader.insert("TIME-OBS",("BJDMID",times_tab[i]['int_mid_BJD_TDB'],"Mid-Exposure time (MBJD_TDB)"),after=True)
+            _thisheader.insert("BJDMID",("MJDSTART",times_tab[i]['int_start_MJD_UTC'],"Exposure start time (MJD_UTC)"),after=True)
+            _thisheader['NINTS'] = 1 # set nint to 1
+            _thisheader.insert("NINTS",("NINT",1,"Number of ints"))
+        else:
+            _thisheader['NINT'] = 1 # set nint to 1
         
         _thisheader["COMMENT"] = 'Extracted from a multi-integration file by ParseIntegration.pro'
         outHDU = fits.PrimaryHDU(_thisint,header=_thisheader)
