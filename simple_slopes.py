@@ -56,11 +56,14 @@ def get_rawfiles():
 
 def do_all_slopes():
     linkDir, outDir, raw_files = get_rawfiles()
-    for dirNow in raw_files.keys():
+    for dirInd,dirNow in enumerate(raw_files.keys()):
         saveDir = os.path.join(outDir,dirNow)
         
         if os.path.exists(saveDir) == False:
             os.mkdir(saveDir)
+            
+        print("Working on directory {}".format(dirNow))
+        print("This is dir {} of {}".format(dirInd+1,len(raw_files.keys())+1))
         
         useFiles = raw_files[dirNow]
         for oneFile in useFiles:
