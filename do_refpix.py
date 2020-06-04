@@ -74,6 +74,7 @@ def one_file_refpix(allInput):
     
     useDat = refObject.data
     header['REFPIX'] = (True,'pynrc reference pixel applied?')
+    header['SKIPSD'] = (skipSide,'Skip the side reference pixel correction?')
     outName = os.path.join(saveDir,fileName)
     primHDU = fits.PrimaryHDU(useDat,header=header)
     
