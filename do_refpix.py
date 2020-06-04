@@ -21,6 +21,14 @@ if os.path.exists(paramFile) == False:
 with open(paramFile) as paramFileOpen:
     symLinkParam = yaml.safe_load(paramFileOpen)
 
+if 'skipSide' in symLinkParam:
+    if symLinkParam['skipSide'] == True:
+        skipSide = True
+    else:
+        skipSide = False
+else:
+    skipSide = False
+    
 dirname = 'raw_separated_refpix'
 linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_separated')
 outDir = os.path.join(symLinkParam['symLinkDir'],dirname)
@@ -59,7 +67,7 @@ def one_file_refpix(allInput):
     refObject.correct_amp_refs()
     refObject.calc_avg_cols(avg_type='pixel')
     refObject.calc_col_smooth(savgol=True)
-    if refObject.refs_side_avg is None:
+    if (refObject.refs_side_avg is None) | (skipSide == True):
         pass ## can't do side ref correction with no side ref pixels
     else:
         refObject.correct_col_refs()

@@ -4,4 +4,5 @@ symLinkDir: /surtrdata1/tso_analysis/AZLab03_june2019/June2019_SWLed/symlinks
 ncdhasCommand:  /usr/local/nircamsuite/ncdhas/ncdhas ## Command to run ncdhas
 customFlags: '+cfg isimcv3 +ow +wi +wd +ws -rx +rc -rss +rsf -cbp -cs -cbs -cd +mf 2 -cgm'
 pynrcRefpix: True
+skipSide: False ## skip the side reference pixels?
 dmsConvert: False
