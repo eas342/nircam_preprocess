@@ -33,8 +33,13 @@ def get_rawfiles():
     paramFile = 'parameters/pipe_params.yaml'
     with open(paramFile) as paramFileOpen:
         symLinkParam = yaml.safe_load(paramFileOpen)
-    linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_separated')
-    outDir = os.path.join(symLinkParam['symLinkDir'],'simple_slopes')
+    if symLinkParam['pynrcRefpix'] == True:
+        linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_sep_refpix')
+        outDir = os.path.join(symLinkParam['symLinkDir'],'simple_slopes_refpix')
+    else:
+        linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_separated')
+        outDir = os.path.join(symLinkParam['symLinkDir'],'simple_slopes')
+    
     if os.path.exists(outDir) == False:
         os.mkdir(outDir)
     
@@ -63,7 +68,7 @@ def do_all_slopes():
             os.mkdir(saveDir)
             
         print("Working on directory {}".format(dirNow))
-        print("This is dir {} of {}".format(dirInd+1,len(raw_files.keys())+1))
+        print("This is dir {} of {}".format(dirInd+1,len(raw_files.keys())))
         
         useFiles = raw_files[dirNow]
         for oneFile in useFiles:
