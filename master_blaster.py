@@ -8,6 +8,7 @@ from sys import argv
 import yaml
 import pdb
 import sys
+import simple_slopes
 
 ## Must be run with the astroconda environment where I installed pynrc
 ## (if wanting to use his reference pixel routines)
@@ -55,22 +56,15 @@ def run_all(pipeParamsFileName='parameters/pipe_params.yaml'):
     else:
         pynrcRefpix = pipeParams['pynrcRefpix']
     
-    if pynrcRefpix == True:
+    if 'simpleSlopes' not in pipeParams:
+        pipeParams['simpleSlopes'] = False
+    
+    if pipeParams['simpleSlopes'] == True:
+        simple_slopes.do_all_slopes()
+    elif pynrcRefpix == True:
         print("Applying pynrc reference pixel corrections...")
-        ## Correct reference pixels with pynrc since it works on subarrays
-        do_refpix.make_symlink_dir()
-        do_refpix.do_refpix()
-        
-        print("Making symbolic links to refence-corrected integrations...")
-        ## Make symbolic links to the files that have been reference pixel corrected
-        make_syml.make_syml(fromRefPix=True)
-        
-        ## copy the symbolic links where ncdas will be run
-        symlinks_sep_refpix = os.path.join(pipeParams['symLinkDir'],'symlinks_sep_refpix')
-        runDirectory = os.path.join(pipeParams['symLinkDir'],'raw_separated_MMM_refpix')
-        if os.path.exists(runDirectory) == False:
-            os.mkdir(runDirectory)
-        call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
+        do_refpix.do_all_pipeline()
+
         
         print("Running NCDHAS on reference-corrected data...")
         ## Run this command line version of ncdhas

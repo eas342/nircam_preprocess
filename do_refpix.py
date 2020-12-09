@@ -111,7 +111,25 @@ def do_refpix(testMode=False):
 def do_testrun():
     do_refpix(testMode=True)
 
-if __name__ == "__main__":
+def do_all_pipeline(pipeParamsFileName='parameters/pipe_params.yaml'):
+    with open(pipeParamsFileName) as pipeParamFile:
+        pipeParams = yaml.safe_load(pipeParamFile)
+    
+    ## Correct reference pixels with pynrc since it works on subarrays
     make_symlink_dir()
     do_refpix()
+    
+    print("Making symbolic links to refence-corrected integrations...")
+    ## Make symbolic links to the files that have been reference pixel corrected
     make_syml.make_syml(fromRefPix=True)
+    
+    ## copy the symbolic links where ncdas will be run
+    symlinks_sep_refpix = os.path.join(pipeParams['symLinkDir'],'symlinks_sep_refpix')
+    runDirectory = os.path.join(pipeParams['symLinkDir'],'raw_separated_MMM_refpix')
+    if os.path.exists(runDirectory) == False:
+        os.mkdir(runDirectory)
+    call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
+
+
+if __name__ == "__main__":
+    do_all_pipeline()
