@@ -60,6 +60,9 @@ def run_all(pipeParamsFileName='parameters/pipe_params.yaml'):
         pipeParams['simpleSlopes'] = False
     
     if pipeParams['simpleSlopes'] == True:
+        if pynrcRefpix == True:
+            do_refpix.do_all_pipeline()
+        
         simple_slopes.do_all_slopes()
     elif pynrcRefpix == True:
         print("Applying pynrc reference pixel corrections...")
