@@ -16,7 +16,7 @@ def fit_slope(fileName=defaultFile,writeOutput=False):
     nz, ny, nx = dat.shape
     
     flatDat = np.reshape(dat,[nz,nx * ny])
-    x = np.arange(5) * origHead['TGROUP']
+    x = np.arange(origHead['NGROUP']) * origHead['TGROUP']
     pfit = np.polyfit(x,flatDat,1)
     
     slope = np.reshape(pfit[0],[ny,nx])
