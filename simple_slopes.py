@@ -9,7 +9,22 @@ from copy import deepcopy
 
 defaultFile = 'nircam_011_nircam_011_jw88888002001_01101_00002-seg002_nrca5_uncal_I00065.fits'
 
-def fit_slope(fileName=defaultFile,writeOutput=False):
+def fit_slope(fileName=defaultFile,writeOutput=False,
+              returnIntercept=False):
+    """
+    Fit a line to each pixel's samples up the ramp
+    
+    Parameters
+    ----------
+    fileName: str
+        Path to FITS cube file (assuming integrations are split up)
+    writeOutput: bool
+        Write output to a fits file called :code:`es_slope.fits` or 
+        :code:`es_intercept.fits`?
+    returnIntercept: bool
+        If True, returns the intercept of the line. Otherwise
+        the slope is returned.
+    """
     HDUList = fits.open(fileName)
     origHead = HDUList[0].header
     dat = HDUList[0].data
@@ -19,12 +34,19 @@ def fit_slope(fileName=defaultFile,writeOutput=False):
     x = np.arange(origHead['NGROUP']) * origHead['TGROUP']
     pfit = np.polyfit(x,flatDat,1)
     
-    slope = np.reshape(pfit[0],[ny,nx])
-    outHDU = fits.PrimaryHDU(slope,origHead)
+    if returnIntercept == True:
+        flatResult = pfit[1]
+        resultFile = 'es_intercept.fits'
+    else:
+        flatResult = pfit[0]
+        resultFile = 'es_slope.fits'
+    
+    result2D = np.reshape(flatResult,[ny,nx])
+    outHDU = fits.PrimaryHDU(result2D,origHead)
     
     HDUList.close()
     if writeOutput == True:
-        outHDU.writeto('es_slope.fits',overwrite=True)
+        outHDU.writeto(resultFile,overwrite=True)
     else:
         return outHDU
 
