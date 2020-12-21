@@ -23,3 +23,5 @@ parameters/ncdhasParams_*.yaml
 parameters/symLinkParams_*.yaml
 parameters/pipe_params*.yaml
 parameters/header_fixes*.yaml
+diagnostics/
+nircam_tests/test_cube.fits
