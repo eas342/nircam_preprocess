@@ -36,5 +36,24 @@ class linefit_check(unittest.TestCase):
         interceptFit = primHDU.data
         self.assertTrue(np.allclose(interceptFit,self.inputIntercept))
 
+
+class param_check(unittest.TestCase):
+    def test_true_and_set(self):
+        tmp = {'a': True, 'b': [5]}
+        self.assertTrue(simple_slopes.exists_true(tmp,'a'))
+
+    def test_not_in_dict(self):
+        tmp = {'a': True, 'b': [5]}
+        self.assertFalse(simple_slopes.exists_true(tmp,'c'))
+    
+    def test_false_and_set(self):
+        tmp = {'a': False, 'b': [5]}
+        self.assertFalse(simple_slopes.exists_true(tmp,'a'))
+
+    def test_not_set_as_bool(self):
+        tmp = {'a': True, 'b': [5]}
+        self.assertFalse(simple_slopes.exists_true(tmp,'b'))
+        
+
 if __name__ == '__main__':
     unittest.main()
