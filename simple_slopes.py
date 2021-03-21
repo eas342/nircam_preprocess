@@ -51,6 +51,18 @@ def fit_slope(fileName=defaultFile,writeOutput=False,
         return outHDU
 
 
+def exists_true(inDict,key):
+    """
+    Test of a key is in a dictionry and if its True
+    """
+    if key in inDict:
+        if inDict[key] == True:
+            return True
+        else:
+            return False
+    else:
+        return False
+
 def get_rawfiles():
     paramFile = 'parameters/pipe_params.yaml'
     with open(paramFile) as paramFileOpen:
@@ -58,12 +70,17 @@ def get_rawfiles():
     if symLinkParam['pynrcRefpix'] == True:
         linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_sep_refpix')
         outDir = os.path.join(symLinkParam['symLinkDir'],'simple_slopes_refpix')
+        interceptDir = os.path.join(symLinkParam['symLinkDir'],'intercepts_refpix')
     else:
         linkDir = os.path.join(symLinkParam['symLinkDir'],'symlinks_separated')
         outDir = os.path.join(symLinkParam['symLinkDir'],'simple_slopes')
+        interceptDir = os.path.join(symLinkParam['symLinkDir'],'intercepts')
     
     if os.path.exists(outDir) == False:
         os.mkdir(outDir)
+    
+    if exists_true(symLinkParam,'saveIntercept'):
+        os.mkdir(interceptDir)
     
     raw_dirs= listdir(linkDir)
     
@@ -78,16 +95,23 @@ def get_rawfiles():
                     useList.remove(onefile)
 
         raw_files[oneDir] = useList
-    return linkDir, outDir, raw_files
+    return linkDir, outDir, interceptDir, raw_files, symLinkParam
     
 
+
+
 def do_all_slopes():
-    linkDir, outDir, raw_files = get_rawfiles()
+    linkDir, outDir, interceptDir, raw_files, params = get_rawfiles()
     for dirInd,dirNow in enumerate(raw_files.keys()):
         saveDir = os.path.join(outDir,dirNow)
         
         if os.path.exists(saveDir) == False:
             os.mkdir(saveDir)
+
+        if exists_true(params,'saveIntercept'):
+            interceptSaveDir = os.path.join(interceptDir,dirNow)
+            os.mkdir(interceptSaveDir)
+
             
         print("Working on directory {}".format(dirNow))
         print("This is dir {} of {}".format(dirInd+1,len(raw_files.keys())))
@@ -97,7 +121,15 @@ def do_all_slopes():
             rampFile = os.path.join(linkDir,dirNow,oneFile)
             outHDU = fit_slope(rampFile)
             outName = os.path.splitext(oneFile)[0]+'.slp.fits'
+            
             outHDU.writeto(os.path.join(saveDir,outName),overwrite=True)
+
+            if exists_true(params,'saveIntercept'):
+                interceptHDU = fit_slope(rampFile,returnIntercept=True)
+                interceptName = os.path.splitext(oneFile)[0]+'.intercept.fits'
+                interceptPath = os.path.join(interceptSaveDir,interceptName)
+                interceptHDU.writeto(interceptPath,overwrite=True)
+                    
         
 if __name__ == "__main__":
     do_all_slopes()
