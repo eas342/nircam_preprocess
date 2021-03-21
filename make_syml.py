@@ -73,27 +73,47 @@ def dms_to_fitswriter_head(head):
     elif head['DETECTOR'] == 'NRCALONG':
         head.insert('DETECTOR',('SCA_ID',485, 'Detector ID'),after=True)
         
-        head['SUBSTRT1'] = (2048, "Starting pixel column number DMS orientation")
-        head['SUBSTRT2'] = (1, "Starting pixel row number DMS orientation")
-        head.insert('SUBSTRT2',('COLCORNR',1, "Starting column number"),after=True)
-        head.insert('COLCORNR',('ROWCORNR',1,"Starting row number"),after=True)
-        
+        grismr_List = ['SUBGRISM64','SUBGRISM128','SUBGRISM256']
+
         if 'SUBARRAY' not in head:
             raise Exception("Couldn't find subarray name in head to place subarray")
         else:
             if head['SUBARRAY'] == 'FULL':
+                head['SUBSTRT1'] = (2048, "Starting pixel column number DMS orientation")
+                head['SUBSTRT2'] = (1, "Starting pixel row number DMS orientation")
+                head.insert('SUBSTRT2',('COLCORNR',1, "Starting column number"),after=True)
+                head.insert('COLCORNR',('ROWCORNR',1,"Starting row number"),after=True)
+                
                 head.insert('COLCORNR',('TREFROW',4,'top reference pixel rows   '))
                 head.insert('COLCORNR',('BREFROW',4,'bottom reference pixel rows'))
                 head.insert('COLCORNR',('LREFCOL',4,'left col reference pixels  '))
                 head.insert('COLCORNR',('RREFCOL',4,'right col reference pixels '))
                 head.insert("SUBSTRT2", ('HWINMODE','DISABLE','Horizontal window mode enabled?'),after=True)
             
-            elif 'SUBGRISM' in head['SUBARRAY']:
+            elif head['SUBARRAY'] in grismr_List:
+                head['SUBSTRT1'] = (2048, "Starting pixel column number DMS orientation")
+                head['SUBSTRT2'] = (1, "Starting pixel row number DMS orientation")
+                head.insert('SUBSTRT2',('COLCORNR',1, "Starting column number"),after=True)
+                head.insert('COLCORNR',('ROWCORNR',1,"Starting row number"),after=True)
+                
                 head.insert('COLCORNR',('TREFROW',0,'top reference pixel rows   '))
                 head.insert('COLCORNR',('BREFROW',4,'bottom reference pixel rows'))
                 head.insert('COLCORNR',('LREFCOL',4,'left col reference pixels  '))
                 head.insert('COLCORNR',('RREFCOL',4,'right col reference pixels '))
-                head.insert("SUBSTRT2", ('HWINMODE','DISABLE','Horizontal window mode enabled?'),after=True)
+                head.insert("SUBSTRT2", ('HWINMODE','ENABLE','Horizontal window mode enabled?'),after=True)
+            elif head['SUBARRAY'] == 'GRISMC64-MIRAGE':
+                ## leave substr1 and substr2 as they are
+                ## should be SUBSTRT1=1863, SUBSTRT2=1
+                #head['SUBSTRT1'] = (1863, "Starting pixel column number DMS orientation")
+                #head['SUBSTRT2'] = (1, "Starting pixel row number DMS orientation")
+                head.insert('SUBSTRT2',('COLCORNR',2048 - head['SUBSTRT1'] + 1, "Starting column number"),after=True)
+                head.insert('COLCORNR',('ROWCORNR',head['SUBSTRT2'],"Starting row number"),after=True)
+                
+                head.insert('COLCORNR',('TREFROW',4,'top reference pixel rows   '))
+                head.insert('COLCORNR',('BREFROW',4,'bottom reference pixel rows'))
+                head.insert('COLCORNR',('LREFCOL',0,'left col reference pixels  '))
+                head.insert('COLCORNR',('RREFCOL',0,'right col reference pixels '))
+                head.insert("SUBSTRT2", ('HWINMODE','ENABLE','Horizontal window mode enabled?'),after=True)
             else:
                 raise Exception("Need to add this subarray {}".format(head['SUBARRAY']))
             
