@@ -15,6 +15,8 @@ from multiprocessing import Pool
 
 pynrc.setup_logging('WARN', verbose=False)
 
+biasDir = '/usr/local/nircamsuite/ncdhas/cal/Bias/'
+
 paramFile = 'parameters/pipe_params.yaml'
 if os.path.exists(paramFile) == False:
     copyfile('parameters/example_pipe_params.yaml',paramFile)
@@ -57,12 +59,33 @@ def get_rawfiles():
         raw_files[oneDir] = useList
     return raw_files
 
+def get_bias(dat,header):
+    nZ, nY, nX = dat.shape
+    if ('DETECTOR' in header):
+        if header['DETECTOR'] == 'NRCALONG':
+            bias_file = os.path.join(biasDir,'NRCA5_17158_Bias_ISIMCV3_2016-02-09.fits')
+            bias_full = fits.getdata(bias_file,extname='SCI')
+            startX = header['COLCORNR'] - 1
+            endX = startX + nX
+            startY = header['ROWCORNR'] - 1
+            endY = startY + nY
+            bias_cut = bias_full[startY:endY,startX:endX]
+            bias_cube = np.tile(bias_cut,[nZ,1,1])
+        else:
+            bias_cube = 0
+    else:
+        bias_cube = 0
+    return bias_cube
+
+
 def one_file_refpix(allInput):
     fileName,linkDir,dirNow,saveDir = allInput
     HDUList = fits.open(os.path.join(linkDir,dirNow,fileName))
     dat = HDUList[0].data
     header = HDUList[0].header
-    refObject = pynrc.reduce.ref_pixels.NRC_refs(dat,header,altcol=True)
+    bias_cube = get_bias(dat,header)
+    
+    refObject = pynrc.reduce.ref_pixels.NRC_refs(dat-bias_cube,header,altcol=True)
     refObject.calc_avg_amps()
     refObject.correct_amp_refs()
     refObject.calc_avg_cols(avg_type='pixel')
@@ -72,7 +95,7 @@ def one_file_refpix(allInput):
     else:
         refObject.correct_col_refs()
     
-    useDat = refObject.data
+    useDat = refObject.data #+ bias_cube
     header['REFPIX'] = (True,'pynrc reference pixel applied?')
     header['SKIPSD'] = (skipSide,'Skip the side reference pixel correction?')
     outName = os.path.join(saveDir,fileName)
@@ -103,6 +126,7 @@ def do_refpix(testMode=False):
         inputList = []
         for fileName in useFiles:
             inputList.append([fileName,linkDir,dirNow,saveDir])
+            #one_file_refpix([fileName,linkDir,dirNow,saveDir])
         
         p = Pool(12)
         p.map(one_file_refpix,inputList)
