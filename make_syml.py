@@ -70,8 +70,21 @@ def dms_to_fitswriter_head(head):
     head = dms_plurals_to_singlular(head)
     if 'DETECTOR' not in head:
         raise Exception("Couldn't find detector name to know how to assign SCA_ID")
-    elif head['DETECTOR'] == 'NRCALONG':
-        head.insert('DETECTOR',('SCA_ID',485, 'Detector ID'),after=True)
+    elif head['DETECTOR'] in ['NRCALONG','NRCA1','NRCA3','NRCB2','NRCB4']:
+        if head['DETECTOR'] == 'NRCALONG':
+            sca_ID = 485
+        elif head['DETECTOR'] == 'NRCA1':
+            sca_ID = 481
+        elif head['DETECTOR'] == 'NRCA3':
+            sca_ID = 483
+        elif head['DETECTOR'] == 'NRCB2':
+            sca_ID = 487
+        elif head['DETECTOR'] == 'NRCB4':
+            sca_ID = 489
+        else:
+            raise Exception("{} should be in this category".format(head['DETECTOR']))
+
+        head.insert('DETECTOR',('SCA_ID',sca_ID, 'Detector ID'),after=True)
         
         grismr_List = ['SUBGRISM64','SUBGRISM128','SUBGRISM256']
 
@@ -119,8 +132,10 @@ def dms_to_fitswriter_head(head):
             
             ## change to FITWriter subarray name
             head.insert("SUBARRAY",("SUBORIGN",head['SUBARRAY'],'Original DMS subarray name'),after=True)
-            head['SUBARRAY'] = (True, "Is this a subarray?")
-            
+            if head['SUBORIGN'] == 'FULL':
+                head['SUBARRAY'] = (False, "Is this a subarray?")
+            else:
+                head['SUBARRAY'] = (True, "Is this a subarray?")
     else:
         raise Exception("Need to add this detector {}".format(head['DETECTOR']))
     
@@ -134,8 +149,10 @@ def flip_data(data,head):
     
     if 'DETECTOR' not in head:
         raise Exception("Couldn't find detector name to know how to flip")
-    elif head['DETECTOR'] == 'NRCALONG':
+    elif head['DETECTOR'] in ['NRCALONG','NRCA1','NRCA3','NRCB2','NRCB4']:
         return data[:,:,::-1]
+    elif head['DETECTOR'] in ['NRCBLONG','NRCA2','NRCA4','NRCB1','NRCB3']:
+        return data[:,::-1,:]
     else:
         raise NotImplementedError("Need to add this detector")
 
