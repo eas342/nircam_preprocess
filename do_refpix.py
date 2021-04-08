@@ -12,6 +12,7 @@ import pdb
 from copy import deepcopy
 import make_syml
 from multiprocessing import Pool
+import warnings
 
 pynrc.setup_logging('WARN', verbose=False)
 
@@ -62,8 +63,36 @@ def get_rawfiles():
 def get_bias(dat,header):
     nZ, nY, nX = dat.shape
     if ('DETECTOR' in header):
+        skip_bias = False
         if header['DETECTOR'] == 'NRCALONG':
-            bias_file = os.path.join(biasDir,'NRCA5_17158_Bias_ISIMCV3_2016-02-09.fits')
+            bias_name = 'NRCA5_17158_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCA1':
+            bias_name = 'NRCA1_17004_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCA2':
+            bias_name = 'NRCA2_17006_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCA3':
+            bias_name = 'NRCA3_17012_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCA4':
+            bias_name = 'NRCA4_17048_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCBLONG':
+            bias_name = 'NRCB5_17161_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCB1':
+            bias_name = 'NRCB1_16991_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCB2':
+            bias_name = 'NRCB2_17005_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCB3':
+            bias_name = 'NRCB3_17011_Bias_ISIMCV3_2016-02-09.fits'
+        elif header['DETECTOR'] == 'NRCB4':
+            bias_name = 'NRCB4_17047_Bias_ISIMCV3_2016-02-09.fits'
+        else:
+            skip_bias = True
+
+        
+        ## cut out bias and tile it to match the cube, if there is a bias
+        if skip_bias == True:
+            bias_cube = 0
+        else:
+            bias_file = os.path.join(biasDir,bias_name)
             bias_full = fits.getdata(bias_file,extname='SCI')
             startX = header['COLCORNR'] - 1
             endX = startX + nX
@@ -71,8 +100,7 @@ def get_bias(dat,header):
             endY = startY + nY
             bias_cut = bias_full[startY:endY,startX:endX]
             bias_cube = np.tile(bias_cut,[nZ,1,1])
-        else:
-            bias_cube = 0
+            
     else:
         bias_cube = 0
     return bias_cube
