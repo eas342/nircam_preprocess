@@ -178,11 +178,11 @@ def do_all_pipeline(pipeParamsFileName='parameters/pipe_params.yaml'):
     ## copy the symbolic links where ncdas will be run
     symlinks_sep_refpix = os.path.join(pipeParams['symLinkDir'],'symlinks_sep_refpix')
     
-    runDirectory_baseName = 'raw_separated_MMM_refpix'
-    runDirectory = os.path.join(pipeParams['symLinkDir'],runDirectory_baseName)
-    if os.path.exists(runDirectory) == False:
-        os.mkdir(runDirectory)
-    call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
+    for runDirectory_baseName in ['raw_separated_MMM_refpix','raw_separated_MPM_refpix']:
+        runDirectory = os.path.join(pipeParams['symLinkDir'],runDirectory_baseName)
+        if os.path.exists(runDirectory) == False:
+            os.mkdir(runDirectory)
+        call('cp -r {}/* {}'.format(symlinks_sep_refpix,runDirectory),shell=True)
 
 
 if __name__ == "__main__":
